@@ -1,0 +1,137 @@
+{
+  "info": {
+    "_postman_id": "kampus-meal-collection",
+    "name": "Kampus Meal API",
+    "description": "API Collection untuk Kampus Meal",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Endpoints untuk authentication (register & login)",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"johndoe@example.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "## Register User Baru\n\nEndpoint untuk mendaftarkan user baru ke sistem Kampus Meal.\n\n### Request Body\n```json\n{\n  \"username\": \"string (required, min 3 karakter, unik)\",\n  \"email\": \"string (required, format email valid, unik)\",\n  \"password\": \"string (required, min 6 karakter)\",\n  \"confirmPassword\": \"string (required, harus sama dengan password)\"\n}\n```\n\n### Response Success (201)\n```json\n{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"uid\": \"firebase-user-id\",\n    \"email\": \"johndoe@example.com\",\n    \"username\": \"johndoe\"\n  }\n}\n```\n\n### Response Error\n- **400 Bad Request**: Validasi gagal (username/email sudah dipakai, password tidak match, dll)\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Validasi\n- Username: minimal 3 karakter, hanya huruf, angka, underscore, dan harus unik\n- Email: format email valid dan harus unik\n- Password: minimal 6 karakter\n- Confirm Password: harus sama persis dengan password"
+          },
+          "response": []
+        },
+        {
+          "name": "Login dengan Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Auto-save token ke environment variable",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.token) {",
+                  "    pm.environment.set(\"token\", jsonData.data.token);",
+                  "    console.log(\"Token saved to environment\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"johndoe@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "## Login dengan Email\n\nEndpoint untuk login ke sistem Kampus Meal menggunakan email.\n\n### Request Body\n```json\n{\n  \"identifier\": \"string (required, email atau username)\",\n  \"password\": \"string (required)\"\n}\n```\n\n**Note**: Field `identifier` bisa diisi dengan **email** atau **username**. Untuk contoh ini, gunakan email.\n\n### Response Success (200)\n```json\n{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"uid\": \"firebase-user-id\",\n      \"email\": \"johndoe@example.com\",\n      \"username\": \"johndoe\"\n    }\n  }\n}\n```\n\n### Response Error\n- **400 Bad Request**: Kredensial tidak valid (email/password salah)\n- **401 Unauthorized**: User tidak ditemukan\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Notes\n- Token akan **otomatis disimpan** ke environment variable `token` untuk digunakan di request berikutnya\n- Token adalah Firebase ID Token yang bisa digunakan untuk autentikasi endpoint lain\n- Token berlaku selama 1 jam (3600 detik)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login dengan Username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Auto-save token ke environment variable",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.token) {",
+                  "    pm.environment.set(\"token\", jsonData.data.token);",
+                  "    console.log(\"Token saved to environment\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"johndoe\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "## Login dengan Username\n\nEndpoint untuk login ke sistem Kampus Meal menggunakan username.\n\n### Request Body\n```json\n{\n  \"identifier\": \"string (required, email atau username)\",\n  \"password\": \"string (required)\"\n}\n```\n\n**Note**: Field `identifier` bisa diisi dengan **email** atau **username**. Untuk contoh ini, gunakan username.\n\n### Response Success (200)\n```json\n{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"uid\": \"firebase-user-id\",\n      \"email\": \"johndoe@example.com\",\n      \"username\": \"johndoe\"\n    }\n  }\n}\n```\n\n### Response Error\n- **400 Bad Request**: Kredensial tidak valid (username/password salah)\n- **401 Unauthorized**: User tidak ditemukan\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Notes\n- Token akan **otomatis disimpan** ke environment variable `token` untuk digunakan di request berikutnya\n- Username tidak case-sensitive (johndoe = JohnDoe = JOHNDOE)\n- Endpoint yang sama dengan login email, hanya field `identifier` yang berbeda"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "## Logout\n\nEndpoint untuk logout dari sistem Kampus Meal. Endpoint ini akan merevoke semua refresh token user sehingga token yang ada tidak bisa di-refresh lagi.\n\n### Headers\n```\nAuthorization: Bearer {token}\n```\n\n**Required**: Token JWT yang didapat dari endpoint login harus disertakan di header Authorization.\n\n### Request Body\nTidak ada request body untuk endpoint ini.\n\n### Response Success (200)\n```json\n{\n  \"success\": true,\n  \"message\": \"Logout berhasil\",\n  \"data\": {\n    \"message\": \"Logout berhasil\"\n  }\n}\n```\n\n### Response Error\n- **401 Unauthorized**: Token tidak valid, expired, atau tidak ditemukan\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Cara Kerja Logout\n1. Backend akan merevoke semua refresh token untuk user tersebut\n2. Token yang sedang digunakan tetap valid sampai expired (1 jam)\n3. Setelah logout, user tidak bisa refresh token dan harus login ulang\n4. Di sisi frontend/mobile, hapus token dari local storage\n\n### Notes\n- Token akan otomatis diambil dari environment variable `{{token}}`\n- Setelah logout, sebaiknya hapus token dari environment atau local storage\n- Token Firebase ID bersifat stateless, jadi tidak bisa langsung invalid\n- Dengan revoke refresh token, user harus login ulang untuk mendapat token baru"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
