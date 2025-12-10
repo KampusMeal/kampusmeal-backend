@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // FIRESTORE SECURITY RULES - KAMPUSMEAL
+    // ============================================
+    // Strategi: Semua akses HARUS melalui Backend API (NestJS)
+    // Client (Mobile App) TIDAK boleh akses Firestore secara langsung
+    // Backend menggunakan Firebase Admin SDK dengan full permission
+    // ============================================
+    
+    // DEFAULT: Deny semua akses dari client
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // ============================================
+    // OPTIONAL: Jika di masa depan perlu akses langsung dari client
+    // (misalnya untuk real-time updates), uncomment dan sesuaikan rules di bawah
+    // ============================================
+    
+    // // USERS Collection
+    // match /users/{userId} {
+    //   // User hanya bisa read/write data mereka sendiri
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
+    
+    // // PRODUCTS Collection
+    // match /products/{productId} {
+    //   // Semua authenticated user bisa read products
+    //   allow read: if request.auth != null;
+    //   // Hanya admin yang bisa write products
+    //   allow write: if request.auth != null && 
+    //                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    // }
+    
+    // // ORDERS Collection
+    // match /orders/{orderId} {
+    //   // User hanya bisa read orders mereka sendiri
+    //   allow read: if request.auth != null && 
+    //                 resource.data.userId == request.auth.uid;
+    //   // User hanya bisa create order untuk diri sendiri
+    //   allow create: if request.auth != null && 
+    //                   request.resource.data.userId == request.auth.uid;
+    //   // Hanya admin atau owner yang bisa update/delete
+    //   allow update, delete: if request.auth != null && (
+    //     resource.data.userId == request.auth.uid ||
+    //     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+    //   );
+    // }
+  }
+}

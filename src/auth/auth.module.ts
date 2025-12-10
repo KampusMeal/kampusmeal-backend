@@ -7,10 +7,12 @@
  */
 
 import { Module } from '@nestjs/common';
+import { StallsModule } from '../stalls/stalls.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 @Module({
+  imports: [StallsModule],
   // Controllers yang ada di module ini
   controllers: [AuthController],
 

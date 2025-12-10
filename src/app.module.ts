@@ -6,6 +6,7 @@
  * - ConfigModule: untuk baca environment variables
  * - FirebaseModule: untuk koneksi ke Firebase
  * - AuthModule: untuk fitur authentication
+ * - StallsModule: untuk fitur CRUD warung
  */
 
 import { Module } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { FirebaseModule } from './firebase/firebase.module';
+import { StallsModule } from './stalls/stalls.module';
 
 @Module({
   imports: [
@@ -28,6 +30,9 @@ import { FirebaseModule } from './firebase/firebase.module';
 
     // Auth module untuk fitur register dan login
     AuthModule,
+
+    // Stalls module untuk fitur CRUD warung
+    StallsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

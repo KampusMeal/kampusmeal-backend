@@ -2,134 +2,557 @@
   "info": {
     "_postman_id": "kampus-meal-collection",
     "name": "Kampus Meal API",
-    "description": "API Collection untuk Kampus Meal",
+    "description": "API Collection untuk Kampus Meal Backend\n\n## 3 Role System:\n- **User** (Pembeli) - Browse & search stalls\n- **Admin** (Tim Dev) - Register stall owners\n- **Stall Owner** (Pemilik Warung) - Manage their stall\n\n## Testing Flow:\n1. Register Admin → Login Admin\n2. Admin Register Stall Owner (creates user + stall)\n3. Stall Owner Login → Manage stall (seamless, no ID!)\n4. User Register → Login → Browse stalls",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Auth",
-      "description": "Endpoints untuk authentication (register & login)",
+      "name": "User Endpoints",
+      "description": "Endpoints untuk User Biasa (Pembeli)",
       "item": [
         {
-          "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"johndoe@example.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
-            },
-            "description": "## Register User Baru\n\nEndpoint untuk mendaftarkan user baru ke sistem Kampus Meal.\n\n### Request Body\n```json\n{\n  \"username\": \"string (required, min 3 karakter, unik)\",\n  \"email\": \"string (required, format email valid, unik)\",\n  \"password\": \"string (required, min 6 karakter)\",\n  \"confirmPassword\": \"string (required, harus sama dengan password)\"\n}\n```\n\n### Response Success (201)\n```json\n{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"uid\": \"firebase-user-id\",\n    \"email\": \"johndoe@example.com\",\n    \"username\": \"johndoe\"\n  }\n}\n```\n\n### Response Error\n- **400 Bad Request**: Validasi gagal (username/email sudah dipakai, password tidak match, dll)\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Validasi\n- Username: minimal 3 karakter, hanya huruf, angka, underscore, dan harus unik\n- Email: format email valid dan harus unik\n- Password: minimal 6 karakter\n- Confirm Password: harus sama persis dengan password"
-          },
-          "response": []
-        },
-        {
-          "name": "Login dengan Email",
-          "event": [
+          "name": "Auth",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "// Auto-save token ke environment variable",
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data && jsonData.data.token) {",
-                  "    pm.environment.set(\"token\", jsonData.data.token);",
-                  "    console.log(\"Token saved to environment\");",
-                  "}"
+              "name": "Register User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identifier\": \"johndoe@example.com\",\n  \"password\": \"password123\"\n}"
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{user_username}}\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\",\n  \"confirmPassword\": \"{{user_password}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "register"]
+                },
+                "description": "Register user baru dengan role 'user' (pembeli)."
+              },
+              "response": []
             },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            },
-            "description": "## Login dengan Email\n\nEndpoint untuk login ke sistem Kampus Meal menggunakan email.\n\n### Request Body\n```json\n{\n  \"identifier\": \"string (required, email atau username)\",\n  \"password\": \"string (required)\"\n}\n```\n\n**Note**: Field `identifier` bisa diisi dengan **email** atau **username**. Untuk contoh ini, gunakan email.\n\n### Response Success (200)\n```json\n{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"uid\": \"firebase-user-id\",\n      \"email\": \"johndoe@example.com\",\n      \"username\": \"johndoe\"\n    }\n  }\n}\n```\n\n### Response Error\n- **400 Bad Request**: Kredensial tidak valid (email/password salah)\n- **401 Unauthorized**: User tidak ditemukan\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Notes\n- Token akan **otomatis disimpan** ke environment variable `token` untuk digunakan di request berikutnya\n- Token adalah Firebase ID Token yang bisa digunakan untuk autentikasi endpoint lain\n- Token berlaku selama 1 jam (3600 detik)"
-          },
-          "response": []
-        },
-        {
-          "name": "Login dengan Username",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "// Auto-save token ke environment variable",
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data && jsonData.data.token) {",
-                  "    pm.environment.set(\"token\", jsonData.data.token);",
-                  "    console.log(\"Token saved to environment\");",
-                  "}"
+              "name": "Login User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.token) {",
+                      "    pm.environment.set(\"user_token\", jsonData.data.token);",
+                      "    console.log(\"User token saved\");",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
-                "type": "text/javascript"
-              }
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identifier\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                },
+                "description": "Login sebagai user. Token auto-saved ke `{{user_token}}`"
+              },
+              "response": []
+            },
+            {
+              "name": "Logout User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "logout"]
+                }
+              },
+              "response": []
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identifier\": \"johndoe\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            },
-            "description": "## Login dengan Username\n\nEndpoint untuk login ke sistem Kampus Meal menggunakan username.\n\n### Request Body\n```json\n{\n  \"identifier\": \"string (required, email atau username)\",\n  \"password\": \"string (required)\"\n}\n```\n\n**Note**: Field `identifier` bisa diisi dengan **email** atau **username**. Untuk contoh ini, gunakan username.\n\n### Response Success (200)\n```json\n{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"uid\": \"firebase-user-id\",\n      \"email\": \"johndoe@example.com\",\n      \"username\": \"johndoe\"\n    }\n  }\n}\n```\n\n### Response Error\n- **400 Bad Request**: Kredensial tidak valid (username/password salah)\n- **401 Unauthorized**: User tidak ditemukan\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Notes\n- Token akan **otomatis disimpan** ke environment variable `token` untuk digunakan di request berikutnya\n- Username tidak case-sensitive (johndoe = JohnDoe = JOHNDOE)\n- Endpoint yang sama dengan login email, hanya field `identifier` yang berbeda"
-          },
-          "response": []
+          ]
         },
         {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "logout"]
+          "name": "Browse Stalls",
+          "item": [
+            {
+              "name": "Get All Stalls",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls?page=1&limit=10&sortBy=rating&sortOrder=desc",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls"],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "{{search_keyword}}",
+                      "disabled": true
+                    },
+                    {
+                      "key": "category",
+                      "value": "Indonesian Food",
+                      "disabled": true
+                    },
+                    {
+                      "key": "minRating",
+                      "value": "4.0",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "rating"
+                    },
+                    {
+                      "key": "sortOrder",
+                      "value": "desc"
+                    }
+                  ]
+                },
+                "description": "**GET /stalls - Listing Warung dengan Pagination**\n\n**Query Parameters:**\n- `search` (optional): Keyword pencarian berdasarkan nama warung\n- `category` (optional): Filter berdasarkan kategori (Indonesian Food, Fast Food, Beverages, dll)\n- `minRating` (optional): Filter minimal rating (0-5)\n- `page` (default: 1): Halaman ke berapa\n- `limit` (default: 10): Jumlah item per halaman\n- `sortBy` (default: rating): Field untuk sorting (rating, name, createdAt)\n- `sortOrder` (default: desc): Urutan sorting (asc/desc)\n\n**Response Structure:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"description\": \"string\",\n      \"imageUrl\": \"string\",\n      \"category\": \"string\",\n      \"rating\": number,\n      \"totalReviews\": number\n    }\n  ],\n  \"meta\": {\n    \"total\": number,\n    \"page\": number,\n    \"limit\": number,\n    \"totalPages\": number\n  }\n}\n```\n\n**Note:** Response TIDAK include `ownerId`, `createdAt`, `updatedAt` untuk privacy dan simplicity."
+              },
+              "response": []
             },
-            "description": "## Logout\n\nEndpoint untuk logout dari sistem Kampus Meal. Endpoint ini akan merevoke semua refresh token user sehingga token yang ada tidak bisa di-refresh lagi.\n\n### Headers\n```\nAuthorization: Bearer {token}\n```\n\n**Required**: Token JWT yang didapat dari endpoint login harus disertakan di header Authorization.\n\n### Request Body\nTidak ada request body untuk endpoint ini.\n\n### Response Success (200)\n```json\n{\n  \"success\": true,\n  \"message\": \"Logout berhasil\",\n  \"data\": {\n    \"message\": \"Logout berhasil\"\n  }\n}\n```\n\n### Response Error\n- **401 Unauthorized**: Token tidak valid, expired, atau tidak ditemukan\n- **500 Internal Server Error**: Error dari Firebase atau server\n\n### Cara Kerja Logout\n1. Backend akan merevoke semua refresh token untuk user tersebut\n2. Token yang sedang digunakan tetap valid sampai expired (1 jam)\n3. Setelah logout, user tidak bisa refresh token dan harus login ulang\n4. Di sisi frontend/mobile, hapus token dari local storage\n\n### Notes\n- Token akan otomatis diambil dari environment variable `{{token}}`\n- Setelah logout, sebaiknya hapus token dari environment atau local storage\n- Token Firebase ID bersifat stateless, jadi tidak bisa langsung invalid\n- Dengan revoke refresh token, user harus login ulang untuk mendapat token baru"
-          },
-          "response": []
+            {
+              "name": "Get Stall Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls/{{stall_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "{{stall_id}}"]
+                },
+                "description": "**GET /stalls/:id - Detail Warung**\n\n**Parameter:**\n- `:id` (path param): ID warung yang ingin dilihat\n\n**Response Structure:**\n```json\n{\n  \"data\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"category\": \"string\",\n    \"rating\": number,\n    \"totalReviews\": number,\n    \"menuItems\": [\n      {\n        \"id\": \"string\",\n        \"name\": \"string\",\n        \"description\": \"string\",\n        \"price\": number,\n        \"imageUrl\": \"string\",\n        \"isAvailable\": boolean\n      }\n    ]\n  }\n}\n```\n\n**Note:**\n- Response TIDAK include `ownerId`, `imageUrl` (stall image), `createdAt`, `updatedAt`\n- `menuItems` adalah array (bisa kosong [] jika belum ada menu)\n- Field `menuItems` akan diisi saat fitur menu management sudah diimplementasi"
+              },
+              "response": []
+            },
+            {
+              "name": "Search Stalls",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls?search={{search_keyword}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls"],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "{{search_keyword}}"
+                    }
+                  ]
+                },
+                "description": "**GET /stalls?search=keyword - Search Warung**\n\n**Query Parameter:**\n- `search`: Keyword pencarian (case-insensitive, search di nama warung)\n\n**Contoh:**\n- `?search=siti` → cari warung dengan nama mengandung \"siti\"\n- `?search=nasi` → cari warung dengan nama mengandung \"nasi\"\n\n**Note:**\n- Search dilakukan client-side (Firestore limitation)\n- Bisa kombinasikan dengan filter lain (category, minRating, dll)\n- Response structure sama dengan GET /stalls (listing)"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin Endpoints",
+      "description": "Endpoints untuk Admin Sistem (Tim Pengembang)",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Register Admin",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\",\n  \"confirmPassword\": \"{{admin_password}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register-admin",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "register-admin"]
+                },
+                "description": "Register admin sistem (tim dev). **INTERNAL USE ONLY!**"
+              },
+              "response": []
+            },
+            {
+              "name": "Login Admin",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.token) {",
+                      "    pm.environment.set(\"admin_token\", jsonData.data.token);",
+                      "    console.log(\"Admin token saved\");",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identifier\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                },
+                "description": "Login sebagai admin. Token auto-saved ke `{{admin_token}}`"
+              },
+              "response": []
+            },
+            {
+              "name": "Logout Admin",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "logout"]
+                },
+                "description": "Logout sebagai admin dan revoke semua refresh tokens."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Stall Owner Management",
+          "item": [
+            {
+              "name": "Register Stall Owner + Create Stall",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data) {",
+                      "    if (jsonData.data.stall && jsonData.data.stall.id) {",
+                      "        pm.environment.set(\"stall_id\", jsonData.data.stall.id);",
+                      "        console.log(\"Stall ID saved: \" + jsonData.data.stall.id);",
+                      "    }",
+                      "    if (jsonData.data.user) {",
+                      "        console.log(\"Stall owner created:\");",
+                      "        console.log(\"Username: \" + jsonData.data.user.username);",
+                      "        console.log(\"Email: \" + jsonData.data.user.email);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "username",
+                      "value": "{{owner_username}}",
+                      "type": "text",
+                      "description": "Username pemilik warung"
+                    },
+                    {
+                      "key": "email",
+                      "value": "{{owner_email}}",
+                      "type": "text",
+                      "description": "Email pemilik warung"
+                    },
+                    {
+                      "key": "password",
+                      "value": "{{owner_password}}",
+                      "type": "text",
+                      "description": "Password pemilik warung"
+                    },
+                    {
+                      "key": "confirmPassword",
+                      "value": "{{owner_password}}",
+                      "type": "text",
+                      "description": "Konfirmasi password"
+                    },
+                    {
+                      "key": "stallName",
+                      "value": "{{stall_name}}",
+                      "type": "text",
+                      "description": "Nama warung"
+                    },
+                    {
+                      "key": "stallDescription",
+                      "value": "{{stall_description}}",
+                      "type": "text",
+                      "description": "Deskripsi warung"
+                    },
+                    {
+                      "key": "stallCategory",
+                      "value": "{{stall_category}}",
+                      "type": "text",
+                      "description": "Kategori warung"
+                    },
+                    {
+                      "key": "stallImage",
+                      "type": "file",
+                      "src": [],
+                      "description": "Gambar warung (JPG, PNG, WebP, max 5MB)"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register-stall-owner",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "register-stall-owner"]
+                },
+                "description": "**Admin only**: Register pemilik warung + buat stall sekaligus.\n\nOutput:\n- User account (stall_owner role)\n- Stall data\n- Username & password untuk dikasih ke pemilik warung"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Stall Owner Endpoints",
+      "description": "Endpoints untuk Pemilik Warung (Seamless - No ID!)",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Login Stall Owner",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.token) {",
+                      "    pm.environment.set(\"owner_token\", jsonData.data.token);",
+                      "    console.log(\"Owner token saved\");",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identifier\": \"{{owner_email}}\",\n  \"password\": \"{{owner_password}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                },
+                "description": "Login sebagai pemilik warung. Token auto-saved ke `{{owner_token}}`"
+              },
+              "response": []
+            },
+            {
+              "name": "Logout Stall Owner",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "logout"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "My Stall (Seamless)",
+          "item": [
+            {
+              "name": "Get My Stall",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall"]
+                },
+                "description": "**Seamless!** Get warung milik sendiri tanpa perlu ID."
+              },
+              "response": []
+            },
+            {
+              "name": "Update My Stall",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Warung Bu Siti (Updated)",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "description",
+                      "value": "Deskripsi baru untuk warung saya",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "category",
+                      "value": "Fast Food",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": [],
+                      "description": "Gambar baru (optional)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall"]
+                },
+                "description": "**Seamless!** Update warung tanpa ID. Semua field optional."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete My Stall",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall"]
+                },
+                "description": "**Seamless!** Delete warung tanpa ID.\n\n**WARNING:** Data & gambar dihapus permanen!"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }

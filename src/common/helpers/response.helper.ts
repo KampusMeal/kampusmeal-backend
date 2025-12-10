@@ -13,19 +13,28 @@ import {
  * @param statusCode - HTTP status code (200, 201, dll)
  * @param message - Pesan untuk user
  * @param data - Data yang mau dikembalikan
+ * @param meta - Metadata tambahan (optional, untuk pagination dll)
  */
 export function createSuccessResponse<T>(
   statusCode: number,
   message: string,
   data: T,
+  meta?: any,
 ): ApiSuccessResponse<T> {
-  return {
+  const response: ApiSuccessResponse<T> = {
     success: true,
     statusCode,
     message,
     data,
     timestamp: new Date().toISOString(),
   };
+
+  // Tambahkan meta kalau ada
+  if (meta) {
+    (response as any).meta = meta;
+  }
+
+  return response;
 }
 
 /**
