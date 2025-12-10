@@ -10,15 +10,17 @@ export class CartEntity {
   userId: string;
   stallId: string;
   stallName: string;
+  qris: string;
   items: Cart['items'];
   totalPrice: number;
   createdAt: string;
   updatedAt: string;
 
-  constructor(cart: Cart) {
+  constructor(cart: Cart, qris: string) {
     this.userId = cart.userId;
     this.stallId = cart.stallId;
     this.stallName = cart.stallName;
+    this.qris = qris;
     this.items = cart.items;
     this.totalPrice = cart.totalPrice;
 
@@ -43,6 +45,7 @@ export class CartEntity {
       userId: this.userId,
       stallId: this.stallId,
       stallName: this.stallName,
+      qris: this.qris,
       items: this.items,
       totalPrice: this.totalPrice,
       createdAt: this.createdAt,

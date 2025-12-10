@@ -34,6 +34,7 @@ export interface CartResponse {
   userId: string;
   stallId: string;
   stallName: string;
+  qris: string;
   items: CartItem[];
   totalPrice: number;
   createdAt: string;

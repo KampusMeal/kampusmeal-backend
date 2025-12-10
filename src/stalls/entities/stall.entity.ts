@@ -51,14 +51,13 @@ export class StallListEntity {
 /**
  * StallDetailEntity
  * Response untuk GET /stalls/:id (detail)
- * Excludes: ownerId, imageUrl, createdAt, updatedAt
+ * Excludes: ownerId, imageUrl, qrisImageUrl, createdAt, updatedAt
  * Includes: menuItems (array of menu items, bisa kosong)
  */
 export class StallDetailEntity {
   id: string;
   name: string;
   description: string;
-  qrisImageUrl: string;
   category: string;
   rating: number;
   totalReviews: number;
@@ -68,7 +67,6 @@ export class StallDetailEntity {
     this.id = stall.id;
     this.name = stall.name;
     this.description = stall.description;
-    this.qrisImageUrl = stall.qrisImageUrl;
     this.category = stall.category;
     this.rating = stall.rating;
     this.totalReviews = stall.totalReviews || 0;

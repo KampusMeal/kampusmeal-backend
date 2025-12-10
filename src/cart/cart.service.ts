@@ -119,7 +119,7 @@ export class CartService {
           updatedAt: existingCart.updatedAt,
         });
 
-        return new CartEntity(existingCart);
+        return new CartEntity(existingCart, stallData?.qrisImageUrl || '');
       } else {
         // Create new cart
         const now = admin.firestore.Timestamp.now();
@@ -144,7 +144,7 @@ export class CartService {
 
         await cartRef.set(newCart);
 
-        return new CartEntity(newCart);
+        return new CartEntity(newCart, stallData?.qrisImageUrl || '');
       }
     } catch (error) {
       if (
@@ -173,7 +173,16 @@ export class CartService {
       }
 
       const cart = cartDoc.data() as Cart;
-      return new CartEntity(cart);
+
+      // Fetch QRIS from stall
+      const stallDoc = await this.firebaseService.firestore
+        .collection(this.STALLS_COLLECTION)
+        .doc(cart.stallId)
+        .get();
+
+      const qris = stallDoc.exists ? stallDoc.data()?.qrisImageUrl || '' : '';
+
+      return new CartEntity(cart, qris);
     } catch (error) {
       console.error('Get cart error:', error);
       throw new InternalServerErrorException('Gagal mengambil cart');
@@ -229,7 +238,15 @@ export class CartService {
         updatedAt: cart.updatedAt,
       });
 
-      return new CartEntity(cart);
+      // Fetch QRIS from stall
+      const stallDoc = await this.firebaseService.firestore
+        .collection(this.STALLS_COLLECTION)
+        .doc(cart.stallId)
+        .get();
+
+      const qris = stallDoc.exists ? stallDoc.data()?.qrisImageUrl || '' : '';
+
+      return new CartEntity(cart, qris);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
