@@ -17,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { StallsModule } from './stalls/stalls.module';
 
+import { CartModule } from './cart/cart.module';
 import { MenuItemsModule } from './menu-items/menu-items.module';
 
 @Module({
@@ -38,6 +39,9 @@ import { MenuItemsModule } from './menu-items/menu-items.module';
 
     // Menu Items module untuk fitur menu management
     MenuItemsModule,
+
+    // Cart module untuk fitur shopping cart
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],

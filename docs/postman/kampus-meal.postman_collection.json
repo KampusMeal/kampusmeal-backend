@@ -198,6 +198,127 @@
               "response": []
             }
           ]
+        },
+        {
+          "name": "Shopping Cart",
+          "item": [
+            {
+              "name": "Add to Cart",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"menuItemId\": \"{{menu_item_id}}\",\n  \"quantity\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/cart/items",
+                  "host": ["{{base_url}}"],
+                  "path": ["cart", "items"]
+                },
+                "description": "**POST /cart/items - Add Item to Cart**\\n\\n**Body:**\\n- `menuItemId`: UUID dari menu item (required)\\n- `quantity`: Jumlah item (1-99, default: 1)\\n\\n**Single-Stall Policy:**\\nJika cart sudah ada items dari warung lain, akan error dengan pesan:\\n\\\"Cart Anda sudah berisi menu dari [Warung X]. Selesaikan order dulu atau hapus cart.\\\"\\n\\n**Auto Behavior:**\\n- Jika item sudah ada di cart → increment quantity\\n- Jika item baru → add to cart\\n- Auto calculate subtotal & totalPrice"
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Cart",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cart",
+                  "host": ["{{base_url}}"],
+                  "path": ["cart"]
+                },
+                "description": "**GET /cart - Get My Cart**\\n\\nGet cart dengan semua items.\\n\\n**Response jika cart ada:**\\n```json\\n{\\n  \\\"userId\\\": \\\"...\\\",\\n  \\\"stallId\\\": \\\"...\\\",\\n  \\\"stallName\\\": \\\"Warung Bu Siti\\\",\\n  \\\"items\\\": [\\n    {\\n      \\\"menuItemId\\\": \\\"...\\\",\\n      \\\"name\\\": \\\"Nasi Goreng\\\",\\n      \\\"price\\\": 15000,\\n      \\\"imageUrl\\\": \\\"...\\\",\\n      \\\"quantity\\\": 2,\\n      \\\"subtotal\\\": 30000\\n    }\\n  ],\\n  \\\"totalPrice\\\": 30000\\n}\\n```\\n\\n**Response jika cart kosong:** `null`"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Item Quantity",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 3\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/cart/items/{{menu_item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["cart", "items", "{{menu_item_id}}"]
+                },
+                "description": "**PATCH /cart/items/:menuItemId - Update Quantity**\\n\\n**Body:**\\n- `quantity`: Quantity baru (1-99)\\n\\n**Auto calculate:** subtotal & totalPrice akan di-recalculate otomatis"
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Item from Cart",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cart/items/{{menu_item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["cart", "items", "{{menu_item_id}}"]
+                },
+                "description": "**DELETE /cart/items/:menuItemId - Remove Item**\\n\\nHapus item dari cart.\\n\\n**Auto behavior:**\\nJika items menjadi kosong setelah remove, cart document akan dihapus otomatis."
+              },
+              "response": []
+            },
+            {
+              "name": "Clear Cart",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cart",
+                  "host": ["{{base_url}}"],
+                  "path": ["cart"]
+                },
+                "description": "**DELETE /cart - Clear Cart**\\n\\nHapus seluruh cart dengan semua items.\\n\\n**Use case:** User batalkan order atau mau ganti warung"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     },

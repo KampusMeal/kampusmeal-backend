@@ -25,9 +25,11 @@ export class ZodValidationPipe implements PipeTransform {
     const result = this.schema.safeParse(value);
 
     if (!result.success) {
-      // Ambil semua pesan error dari Zod
-      // Di Zod v4, error ada di result.error.issues
-      const errorMessages = result.error.issues.map((issue) => issue.message);
+      // Ambil semua pesan error dengan path field
+      const errorMessages = result.error.issues.map((issue) => {
+        const path = issue.path.length > 0 ? `${issue.path.join('.')}: ` : '';
+        return `${path}${issue.message}`;
+      });
 
       // Throw BadRequestException dengan array pesan error
       throw new BadRequestException(errorMessages);
