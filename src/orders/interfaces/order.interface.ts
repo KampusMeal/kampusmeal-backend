@@ -21,11 +21,13 @@ export interface OrderItem {
  * OrderStatus - Status workflow order
  */
 export enum OrderStatus {
-  PENDING_PAYMENT = 'pending_payment', // Order created, belum bayar
-  WAITING_CONFIRMATION = 'waiting_confirmation', // Sudah upload bukti, tunggu confirm owner
-  CONFIRMED = 'confirmed', // Owner approve payment
-  REJECTED = 'rejected', // Owner reject payment
-  COMPLETED = 'completed', // Pesanan selesai
+  PENDING_PAYMENT = 'pending_payment', // Order created, belum upload bukti
+  WAITING_CONFIRMATION = 'waiting_confirmation', // Sudah upload bukti, tunggu owner validasi
+  PROCESSING = 'processing', // Owner approve, pesanan sedang dibuat
+  READY = 'ready', // Pesanan siap diambil/dikirim
+  COMPLETED = 'completed', // Pesanan selesai (sudah diambil/sampai)
+  REJECTED = 'rejected', // Pembayaran ditolak owner
+  CONFIRMED = 'confirmed', // @deprecated - Use PROCESSING instead (backward compatibility)
 }
 
 /**
@@ -44,6 +46,7 @@ export interface Order {
   userId: string;
   stallId: string;
   stallName: string;
+  stallImageUrl: string; // Snapshot foto warung saat checkout
 
   // Snapshot dari cart
   items: OrderItem[];
@@ -75,6 +78,7 @@ export interface OrderResponse {
   userId: string;
   stallId: string;
   stallName: string;
+  stallImageUrl: string;
   items: OrderItem[];
   itemsTotal: number;
   appFee: number;

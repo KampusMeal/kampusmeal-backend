@@ -24,6 +24,8 @@ import { FirebaseService } from '../firebase/firebase.service';
 import type { CheckoutDto } from './dto/checkout.dto';
 import type { QueryOrderDto } from './dto/query-order.dto';
 import type { RejectOrderDto } from './dto/reject-order.dto';
+import type { OrderListResponse } from './entities/order-list.entity';
+import { OrderListEntity } from './entities/order-list.entity';
 import { OrderEntity } from './entities/order.entity';
 import type { Order } from './interfaces/order.interface';
 import { DeliveryMethod, OrderStatus } from './interfaces/order.interface';
@@ -78,6 +80,18 @@ export class OrdersService {
       // Upload payment proof
       const paymentProofUrl = await this.uploadImage(file, orderId);
 
+      // Get stall info for snapshot
+      const stallDoc = await this.firebaseService.firestore
+        .collection('stalls')
+        .doc(cart.stallId)
+        .get();
+
+      if (!stallDoc.exists) {
+        throw new BadRequestException('Warung tidak ditemukan');
+      }
+
+      const stall = stallDoc.data() as { stallImageUrl: string };
+
       // Calculate fees
       const itemsTotal = cart.totalPrice; // Total dari cart items
       const appFee = this.APP_FEE; // 1000
@@ -92,6 +106,7 @@ export class OrdersService {
         userId,
         stallId: cart.stallId,
         stallName: cart.stallName,
+        stallImageUrl: stall.stallImageUrl, // Snapshot foto warung
         items: cart.items,
         itemsTotal,
         appFee,
@@ -206,11 +221,12 @@ export class OrdersService {
 
   /**
    * Get user's orders (history)
+   * Returns simplified list view with OrderListEntity
    */
   async getUserOrders(
     userId: string,
     query: QueryOrderDto,
-  ): Promise<{ data: OrderEntity[]; meta: any }> {
+  ): Promise<{ data: OrderListResponse[]; meta: any }> {
     try {
       let ordersQuery = this.firebaseService.firestore
         .collection(this.ORDERS_COLLECTION)
@@ -235,7 +251,37 @@ export class OrdersService {
       const endIndex = startIndex + limit;
 
       const paginatedOrders = allOrders.slice(startIndex, endIndex);
-      const data = paginatedOrders.map((order) => new OrderEntity(order));
+
+      // Populate stallImageUrl untuk order lama yang tidak punya field ini
+      const ordersWithImages = await Promise.all(
+        paginatedOrders.map(async (order) => {
+          if (!order.stallImageUrl && order.stallId) {
+            try {
+              const stallDoc = await this.firebaseService.firestore
+                .collection('stalls')
+                .doc(order.stallId)
+                .get();
+
+              if (stallDoc.exists) {
+                const stallData = stallDoc.data() as { stallImageUrl?: string };
+                order.stallImageUrl = stallData.stallImageUrl || '';
+              }
+            } catch (error) {
+              console.error(
+                `Failed to fetch stall image for ${order.stallId}:`,
+                error,
+              );
+              order.stallImageUrl = '';
+            }
+          }
+          return order;
+        }),
+      );
+
+      // Use OrderListEntity for simplified list view
+      const data = ordersWithImages.map((order) =>
+        new OrderListEntity(order).toJSON(),
+      );
 
       return {
         data,
@@ -399,12 +445,12 @@ export class OrdersService {
         );
       }
 
-      // Update status
+      // Update status to PROCESSING (owner mulai buat pesanan)
       await this.firebaseService.firestore
         .collection(this.ORDERS_COLLECTION)
         .doc(orderId)
         .update({
-          status: OrderStatus.CONFIRMED,
+          status: OrderStatus.PROCESSING,
           updatedAt: admin.firestore.Timestamp.now(),
         });
 
@@ -493,6 +539,64 @@ export class OrdersService {
   }
 
   /**
+   * Mark order as ready (owner mark pesanan siap diambil/dikirim)
+   */
+  async markReady(stallId: string, orderId: string): Promise<OrderEntity> {
+    try {
+      const orderDoc = await this.firebaseService.firestore
+        .collection(this.ORDERS_COLLECTION)
+        .doc(orderId)
+        .get();
+
+      if (!orderDoc.exists) {
+        throw new NotFoundException('Order tidak ditemukan');
+      }
+
+      const order = orderDoc.data() as Order;
+
+      // Check ownership
+      if (order.stallId !== stallId) {
+        throw new ForbiddenException('Anda tidak memiliki akses ke order ini');
+      }
+
+      // Check status - harus processing
+      if (order.status !== OrderStatus.PROCESSING) {
+        throw new BadRequestException(
+          'Order harus dalam status diproses untuk diubah ke siap',
+        );
+      }
+
+      // Update status to ready
+      await this.firebaseService.firestore
+        .collection(this.ORDERS_COLLECTION)
+        .doc(orderId)
+        .update({
+          status: OrderStatus.READY,
+          updatedAt: admin.firestore.Timestamp.now(),
+        });
+
+      // Get updated order
+      const updatedDoc = await this.firebaseService.firestore
+        .collection(this.ORDERS_COLLECTION)
+        .doc(orderId)
+        .get();
+
+      const updatedOrder = updatedDoc.data() as Order;
+      return new OrderEntity(updatedOrder);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      console.error('Mark ready error:', error);
+      throw new InternalServerErrorException('Gagal menandai order siap');
+    }
+  }
+
+  /**
    * Complete order (owner mark as completed)
    */
   async completeOrder(stallId: string, orderId: string): Promise<OrderEntity> {
@@ -513,11 +617,9 @@ export class OrdersService {
         throw new ForbiddenException('Anda tidak memiliki akses ke order ini');
       }
 
-      // Check status - harus confirmed
-      if (order.status !== OrderStatus.CONFIRMED) {
-        throw new BadRequestException(
-          'Order belum dikonfirmasi atau sudah selesai',
-        );
+      // Check status - harus ready
+      if (order.status !== OrderStatus.READY) {
+        throw new BadRequestException('Order belum siap atau sudah selesai');
       }
 
       // Update status

@@ -239,6 +239,30 @@ export class OrdersController {
   }
 
   /**
+   * PATCH /orders/my-stall/:orderId/ready
+   * Owner mark pesanan ready (siap diambil/dikirim)
+   */
+  @Patch('my-stall/orders/:orderId/ready')
+  @Roles('stall_owner')
+  @HttpCode(HttpStatus.OK)
+  async markReady(
+    @CurrentUser() user: { uid: string; stallId?: string },
+    @Param('orderId') orderId: string,
+  ) {
+    if (!user.stallId) {
+      throw new Error('Stall ID tidak ditemukan');
+    }
+
+    const data = await this.ordersService.markReady(user.stallId, orderId);
+
+    return createSuccessResponse(
+      HttpStatus.OK,
+      'Pesanan berhasil ditandai siap',
+      data,
+    );
+  }
+
+  /**
    * PATCH /orders/my-stall/:orderId/complete
    * Owner mark order as completed
    */

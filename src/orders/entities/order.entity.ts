@@ -11,6 +11,7 @@ export class OrderEntity {
   userId: string;
   stallId: string;
   stallName: string;
+  stallImageUrl: string;
   items: Order['items'];
   itemsTotal: number;
   appFee: number;
@@ -29,6 +30,7 @@ export class OrderEntity {
     this.userId = order.userId;
     this.stallId = order.stallId;
     this.stallName = order.stallName;
+    this.stallImageUrl = order.stallImageUrl;
     this.items = order.items;
     this.itemsTotal = order.itemsTotal;
     this.appFee = order.appFee;
@@ -62,6 +64,7 @@ export class OrderEntity {
       userId: this.userId,
       stallId: this.stallId,
       stallName: this.stallName,
+      stallImageUrl: this.stallImageUrl,
       items: this.items,
       itemsTotal: this.itemsTotal,
       appFee: this.appFee,

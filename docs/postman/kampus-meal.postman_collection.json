@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "kampus-meal-collection",
     "name": "Kampus Meal API",
-    "description": "API Collection untuk Kampus Meal Backend\n\n## 3 Role System:\n- **User** (Pembeli) - Browse & search stalls\n- **Admin** (Tim Dev) - Register stall owners\n- **Stall Owner** (Pemilik Warung) - Manage their stall\n\n## Testing Flow:\n1. Register Admin → Login Admin\n2. Admin Register Stall Owner (creates user + stall)\n3. Stall Owner Login → Manage stall (seamless, no ID!)\n4. User Register → Login → Browse stalls",
+    "description": "API Collection untuk Kampus Meal Backend\n\n## 3 Role System:\n- **User** (Pembeli) - Browse & search stalls\n- **Admin** (Tim Dev) - Register stall owners\n- **Stall Owner** (Pemilik Warung) - Manage their stall\n\n## Testing Flow:\n1. Register Admin → Login Admin\n2. Admin Register Stall Owner (creates user + stall)\n3. Stall Owner Login → Manage stall (seamless, no ID!)\n4. User Register → Login → Browse stalls\n\n## Order Status Flow (Updated):\n1. **waiting_confirmation** - User upload bukti bayar, nunggu owner validasi\n2. **processing** - Owner approve, pesanan sedang dibuat\n3. **ready** - Pesanan jadi, siap diambil/dikirim\n4. **completed** - Pesanan sudah diambil/diterima user\n5. **rejected** - Pembayaran ditolak owner",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -515,7 +515,7 @@
                     }
                   ]
                 },
-                "description": "**GET /orders - List My Orders (History)**\\n\\n**Query Parameters:**\\n- `status` (optional): Filter by status\\n  - `pending_payment`\\n  - `waiting_confirmation`\\n  - `confirmed`\\n  - `rejected`\\n  - `completed`\\n- `page` (default: 1): Page number\\n- `limit` (default: 10, max: 100): Items per page\\n\\n**Use Cases:**\\n- History lengkap: no filter\\n- History selesai: `?status=completed`\\n- Order ditolak: `?status=rejected`\\n- Pending payment: `?status=pending_payment`\\n\\n**Response:**\\nArray of orders dengan pagination meta"
+                "description": "**GET /orders - List My Orders (History)**\\n\\n**Query Parameters:**\\n- `status` (optional): Filter by status\\n  - `pending_payment` - Menunggu pembayaran\\n  - `waiting_confirmation` - Menunggu konfirmasi penjual\\n  - `processing` - Pesanan sedang dibuat\\n  - `ready` - Pesanan siap diambil/dikirim\\n  - `rejected` - Ditolak\\n  - `completed` - Selesai\\n- `page` (default: 1): Page number\\n- `limit` (default: 10, max: 100): Items per page\\n\\n**Use Cases:**\\n- History lengkap: no filter\\n- History selesai: `?status=completed`\\n- Order ditolak: `?status=rejected`\\n- Pending payment: `?status=pending_payment`\\n\\n**Response (Simplified List):**\\nSimplified order list dengan:\\n- orderId, orderDate\\n- stallName, stallImageUrl\\n- menuItems: [\\\"Nasi Goreng (2x)\\\", \\\"Es Teh (1x)\\\"]\\n- totalPrice\\n- status (backend value)\\n- statusDisplay (human-readable: \\\"Diproses\\\", \\\"Dikirim\\\", \\\"Siap Diambil\\\", dll)\\n\\n**Note:** Detail order endpoint masih return full data."
               },
               "response": []
             },
@@ -1255,7 +1255,7 @@
                     }
                   ]
                 },
-                "description": "**GET /orders/my-stall/orders - List Incoming Orders**\\n\\nLihat pesanan yang masuk ke warung.\\n\\n**Query Parameters:**\\n- `status`: Filter status (`waiting_confirmation`, `confirmed`, `completed`, `rejected`, `pending_payment`)\\n- `page`: Page number\\n- `limit`: Items per page\\n\\n**Use Case:**\\n- Cek pesanan baru yang butuh konfirmasi (`waiting_confirmation`)\\n- Cek pesanan yang sedang diproses (`confirmed`)\\n- Cek history selesai (`completed`)"
+                "description": "**GET /orders/my-stall/orders - List Incoming Orders**\\n\\nLihat pesanan yang masuk ke warung.\\n\\n**Query Parameters:**\\n- `status`: Filter status\\n  - `waiting_confirmation` - Nunggu owner validasi bukti bayar\\n  - `processing` - Pesanan sedang dibuat\\n  - `ready` - Pesanan siap diambil/dikirim\\n  - `completed` - Pesanan selesai\\n  - `rejected` - Pembayaran ditolak\\n- `page`: Page number\\n- `limit`: Items per page\\n\\n**Use Case:**\\n- Cek pesanan baru yang butuh konfirmasi: `?status=waiting_confirmation`\\n- Cek pesanan yang sedang diproses: `?status=processing`\\n- Cek pesanan yang siap: `?status=ready`\\n- Cek history selesai: `?status=completed`\\n\\n**NEW WORKFLOW:**\\n1. User checkout → `waiting_confirmation`\\n2. Owner confirm → `processing` (mulai buat pesanan)\\n3. Owner mark ready → `ready` (pesanan jadi)\\n4. Owner complete → `completed` (sudah diambil/diterima)"
               },
               "response": []
             },
@@ -1295,7 +1295,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["orders", "my-stall", "orders", "{{order_id}}", "confirm"]
                 },
-                "description": "**PATCH /orders/my-stall/orders/:orderId/confirm - Konfirmasi Pembayaran**\\n\\n**Syarat:** Status order harus `waiting_confirmation`\\n\\n**Effect:** Status berubah jadi `confirmed`.\\n\\n**Use Case:** Owner sudah cek mutasi rekening dan uang sudah masuk."
+                "description": "**PATCH /orders/my-stall/orders/:orderId/confirm - Konfirmasi Pembayaran**\\n\\n**Syarat:** Status order harus `waiting_confirmation`\\n\\n**Effect:** Status berubah jadi `processing` (pesanan mulai dibuat).\\n\\n**Use Case:** Owner sudah cek mutasi rekening dan uang sudah masuk. Owner mulai menyiapkan pesanan.\\n\\n**NEW STATUS FLOW:**\\n1. `waiting_confirmation` → Owner cek bukti bayar\\n2. `processing` (setelah confirm) → Owner sedang buat pesanan\\n3. `ready` (setelah mark ready) → Pesanan jadi, siap diambil/dikirim\\n4. `completed` (setelah complete) → Pesanan sudah sampai/diambil"
               },
               "response": []
             },
@@ -1328,6 +1328,26 @@
               "response": []
             },
             {
+              "name": "Mark Order Ready",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/ready",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "ready"]
+                },
+                "description": "**PATCH /orders/my-stall/orders/:orderId/ready - Tandai Pesanan Siap**\\n\\n**NEW ENDPOINT!**\\n\\n**Syarat:** Status order harus `processing`\\n\\n**Effect:** Status berubah jadi `ready`.\\n\\n**Use Case:** Pesanan sudah jadi/siap. Untuk:\\n- Pickup: Pesanan siap diambil user\\n- Delivery: Pesanan siap dikirim (atau sedang dalam perjalanan)\\n\\n**Note:** Setelah ready, owner harus complete setelah pesanan diambil/diterima user."
+              },
+              "response": []
+            },
+            {
               "name": "Complete Order",
               "request": {
                 "method": "PATCH",
@@ -1343,7 +1363,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["orders", "my-stall", "orders", "{{order_id}}", "complete"]
                 },
-                "description": "**PATCH /orders/my-stall/orders/:orderId/complete - Selesaikan Pesanan**\\n\\n**Syarat:** Status order harus `confirmed`\\n\\n**Effect:** Status berubah jadi `completed`.\\n\\n**Use Case:** Makanan sudah diambil oleh user atau diantar."
+                "description": "**PATCH /orders/my-stall/orders/:orderId/complete - Selesaikan Pesanan**\\n\\n**Syarat:** Status order harus `ready`\\n\\n**Effect:** Status berubah jadi `completed`.\\n\\n**Use Case:** \\n- Pickup: User sudah mengambil pesanan\\n- Delivery: Pesanan sudah sampai/diterima user\\n\\n**After Completed:** User bisa submit review untuk order ini."
               },
               "response": []
             }
