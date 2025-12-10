@@ -63,6 +63,9 @@ export interface Order {
   status: OrderStatus;
   rejectionReason: string | null;
 
+  // Review tracking
+  isReviewed?: boolean; // true jika sudah direview
+
   createdAt: admin.firestore.Timestamp;
   updatedAt: admin.firestore.Timestamp;
 }
@@ -81,6 +84,7 @@ export interface OrderResponse {
   paymentProofUrl: string | null;
   status: OrderStatus;
   rejectionReason: string | null;
+  isReviewed?: boolean;
   createdAt: string;
   updatedAt: string;
 }

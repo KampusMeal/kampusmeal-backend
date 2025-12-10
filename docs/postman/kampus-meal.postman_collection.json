@@ -460,6 +460,147 @@
               "response": []
             }
           ]
+        },
+        {
+          "name": "Reviews",
+          "item": [
+            {
+              "name": "Submit Review",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "rating",
+                      "value": "5",
+                      "description": "Rating 1-5 (REQUIRED)",
+                      "type": "text"
+                    },
+                    {
+                      "key": "comment",
+                      "value": "Enak banget! Porsi besar dan harga terjangkau",
+                      "description": "Komentar review (OPTIONAL)",
+                      "type": "text"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "[\"Enak Banget\",\"Porsi Besar\",\"Harga Terjangkau\"]",
+                      "description": "JSON array of tags, max 5 (OPTIONAL)",
+                      "type": "text"
+                    },
+                    {
+                      "key": "images",
+                      "description": "Max 5 photos, each max 5MB (OPTIONAL)",
+                      "type": "file",
+                      "src": []
+                    },
+                    {
+                      "key": "images",
+                      "description": "Photo 2 (OPTIONAL)",
+                      "type": "file",
+                      "src": [],
+                      "disabled": true
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/orders/{{order_id}}/review",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "{{order_id}}", "review"]
+                },
+                "description": "**POST /orders/:orderId/review - Submit Review**\\n\\n**Requirements:**\\n- Order harus berstatus `completed`\\n- Order belum pernah direview\\n\\n**Body (multipart/form-data):**\\n- `rating` (REQUIRED): 1-5\\n- `comment` (OPTIONAL): Text review\\n- `tags` (OPTIONAL): JSON array of tags, max 5\\n  - Available tags: \\\"Enak Banget\\\", \\\"Porsi Besar\\\", \\\"Harga Terjangkau\\\", \\\"Cepat Disajikan\\\", \\\"Bersih & Higienis\\\", \\\"Pelayanan Ramah\\\", \\\"Bumbu Pas\\\", \\\"Masih Hangat\\\", \\\"Bahan Segar\\\", \\\"Lokasi Strategis\\\", \\\"Lama Penyajian\\\", \\\"Agak Mahal\\\", \\\"Porsi Kecil\\\", \\\"Kurang Bumbu\\\", \\\"Sudah Dingin\\\", \\\"Kurang Higienis\\\"\\n- `images` (OPTIONAL): Max 5 photos, each max 5MB, format: JPG/PNG/WebP\\n\\n**Auto Effects:**\\n- Order marked as `isReviewed: true`\\n- Stall rating & totalReviews updated automatically\\n\\n**Response:**\\nCreated review dengan semua fields"
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Reviews",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reviews/my-reviews?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+                  "host": ["{{base_url}}"],
+                  "path": ["reviews", "my-reviews"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "createdAt",
+                      "description": "createdAt or rating"
+                    },
+                    {
+                      "key": "sortOrder",
+                      "value": "desc",
+                      "description": "asc or desc"
+                    }
+                  ]
+                },
+                "description": "**GET /reviews/my-reviews - Get My Reviews**\\n\\n**Query Parameters:**\\n- `page` (default: 1): Page number\\n- `limit` (default: 10, max: 100): Items per page\\n- `sortBy` (default: createdAt): Sort field (createdAt, rating)\\n- `sortOrder` (default: desc): Sort order (asc, desc)\\n\\n**Response:**\\nList of reviews dengan pagination meta"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Stall Reviews (Public)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/reviews/stall/{{stall_id}}?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+                  "host": ["{{base_url}}"],
+                  "path": ["reviews", "stall", "{{stall_id}}"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "rating",
+                      "value": "5",
+                      "description": "Filter by rating (1-5)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "createdAt",
+                      "description": "createdAt or rating"
+                    },
+                    {
+                      "key": "sortOrder",
+                      "value": "desc",
+                      "description": "asc or desc"
+                    }
+                  ]
+                },
+                "description": "**GET /reviews/stall/:stallId - Get Reviews for a Stall (Public)**\\n\\n**PUBLIC ENDPOINT** - No auth required\\n\\n**Query Parameters:**\\n- `rating` (optional): Filter by rating (1-5)\\n- `page` (default: 1): Page number\\n- `limit` (default: 10, max: 100): Items per page\\n- `sortBy` (default: createdAt): Sort field (createdAt, rating)\\n- `sortOrder` (default: desc): Sort order (asc, desc)\\n\\n**Use Case:**\\nDisplay reviews on stall detail page\\n\\n**Response:**\\nList of reviews dengan pagination meta"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     },
@@ -1123,6 +1264,57 @@
                   "path": ["orders", "my-stall", "orders", "{{order_id}}", "complete"]
                 },
                 "description": "**PATCH /orders/my-stall/orders/:orderId/complete - Selesaikan Pesanan**\\n\\n**Syarat:** Status order harus `confirmed`\\n\\n**Effect:** Status berubah jadi `completed`.\\n\\n**Use Case:** Makanan sudah diambil oleh user atau diantar."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reviews",
+          "item": [
+            {
+              "name": "Get My Stall's Reviews",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/reviews/my-stall/reviews?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+                  "host": ["{{base_url}}"],
+                  "path": ["reviews", "my-stall", "reviews"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "rating",
+                      "value": "5",
+                      "description": "Filter by rating (1-5)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "createdAt",
+                      "description": "createdAt or rating"
+                    },
+                    {
+                      "key": "sortOrder",
+                      "value": "desc",
+                      "description": "asc or desc"
+                    }
+                  ]
+                },
+                "description": "**GET /reviews/my-stall/reviews - Get My Stall's Reviews**\\n\\n**Query Parameters:**\\n- `rating` (optional): Filter by rating (1-5)\\n- `page` (default: 1): Page number\\n- `limit` (default: 10, max: 100): Items per page\\n- `sortBy` (default: createdAt): Sort field (createdAt, rating)\\n- `sortOrder` (default: desc): Sort order (asc, desc)\\n\\n**Use Case:**\\nStall owner melihat semua review untuk warung mereka\\n\\n**Response:**\\nList of reviews dengan pagination meta"
               },
               "response": []
             }

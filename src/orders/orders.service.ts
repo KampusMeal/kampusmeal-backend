@@ -104,6 +104,7 @@ export class OrdersService {
         paymentProofUrl, // URL dari bukti pembayaran
         status: OrderStatus.WAITING_CONFIRMATION, // Langsung waiting confirmation
         rejectionReason: null,
+        isReviewed: false, // Belum direview
         createdAt: now,
         updatedAt: now,
       };

@@ -20,6 +20,7 @@ export class OrderEntity {
   paymentProofUrl: string | null;
   status: Order['status'];
   rejectionReason: string | null;
+  isReviewed?: boolean;
   createdAt: string;
   updatedAt: string;
 
@@ -37,6 +38,7 @@ export class OrderEntity {
     this.paymentProofUrl = order.paymentProofUrl;
     this.status = order.status;
     this.rejectionReason = order.rejectionReason;
+    this.isReviewed = order.isReviewed;
 
     // Convert Firestore Timestamp ke ISO string
     this.createdAt =
@@ -69,6 +71,7 @@ export class OrderEntity {
       paymentProofUrl: this.paymentProofUrl,
       status: this.status,
       rejectionReason: this.rejectionReason,
+      isReviewed: this.isReviewed,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
