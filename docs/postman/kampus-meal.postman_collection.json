@@ -94,6 +94,26 @@
               "response": []
             },
             {
+              "name": "Check Authentication",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/check",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "check"]
+                },
+                "description": "**GET /auth/check - Check Authentication**\\n\\nSimple endpoint untuk cek apakah user masih authenticated atau tidak.\\n\\n**Response jika token valid (200 OK):**\\n```json\\n{\\n  \\\"success\\\": true,\\n  \\\"statusCode\\\": 200,\\n  \\\"message\\\": \\\"Authenticated\\\",\\n  \\\"data\\\": {\\n    \\\"authenticated\\\": true\\n  }\\n}\\n```\\n\\n**Response jika token invalid (401 Unauthorized):**\\n```json\\n{\\n  \\\"success\\\": false,\\n  \\\"statusCode\\\": 401,\\n  \\\"message\\\": \\\"Token invalid atau expired\\\"\\n}\\n```\\n\\n**Use Case:**\\n- Cek token masih valid sebelum request lain\\n- Auto-logout jika token expired\\n- Validasi session di frontend\\n\\n**Note:** Endpoint ini tidak mengembalikan data user, hanya status authenticated. Gunakan GET /auth/me untuk data lengkap user."
+              },
+              "response": []
+            },
+            {
               "name": "Get My Profile",
               "request": {
                 "method": "GET",
@@ -971,6 +991,26 @@
                   "host": ["{{base_url}}"],
                   "path": ["auth", "logout"]
                 }
+              },
+              "response": []
+            },
+            {
+              "name": "Check Authentication",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/check",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "check"]
+                },
+                "description": "**GET /auth/check - Check Authentication**\\n\\nSimple endpoint untuk cek apakah stall owner masih authenticated atau tidak.\\n\\n**Response jika token valid (200 OK):**\\n```json\\n{\\n  \\\"success\\\": true,\\n  \\\"statusCode\\\": 200,\\n  \\\"message\\\": \\\"Authenticated\\\",\\n  \\\"data\\\": {\\n    \\\"authenticated\\\": true\\n  }\\n}\\n```\\n\\n**Response jika token invalid (401 Unauthorized):**\\n```json\\n{\\n  \\\"success\\\": false,\\n  \\\"statusCode\\\": 401,\\n  \\\"message\\\": \\\"Token invalid atau expired\\\"\\n}\\n```\\n\\n**Use Case:**\\n- Cek token masih valid sebelum request lain\\n- Auto-logout jika token expired\\n- Validasi session di dashboard stall owner\\n\\n**Note:** Endpoint ini tidak mengembalikan data user, hanya status authenticated."
               },
               "response": []
             }

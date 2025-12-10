@@ -175,6 +175,22 @@ export class AuthController {
   }
 
   /**
+   * Endpoint: GET /api/v1/auth/check
+   * Simple endpoint to check if user is authenticated
+   * Returns 200 if token is valid, 401 if not
+   * Requires: Bearer token di Authorization header
+   */
+  @Get('check')
+  @UseGuards(AuthGuard) // Only check if user is authenticated
+  @HttpCode(HttpStatus.OK)
+  async checkAuth() {
+    // Jika sampai sini berarti token valid (AuthGuard passed)
+    return createSuccessResponse(HttpStatus.OK, 'Authenticated', {
+      authenticated: true,
+    });
+  }
+
+  /**
    * Endpoint: GET /api/v1/auth/me
    * Get current user profile
    * Requires: Bearer token di Authorization header
