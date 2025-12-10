@@ -11,6 +11,8 @@ export interface UserProfileResponse {
   username: string;
   profileImageUrl: string | null;
   role: string;
+  namaAlamat: string | null;
+  detilAlamat: string | null;
 }
 
 export class UserProfileEntity {
@@ -19,13 +21,20 @@ export class UserProfileEntity {
   username: string;
   profileImageUrl: string | null;
   role: string;
+  namaAlamat: string | null;
+  detilAlamat: string | null;
 
-  constructor(userRecord: admin.auth.UserRecord) {
+  constructor(
+    userRecord: admin.auth.UserRecord,
+    address?: { namaAlamat: string | null; detilAlamat: string | null },
+  ) {
     this.uid = userRecord.uid;
     this.email = userRecord.email || '';
     this.username = userRecord.displayName || '';
     this.profileImageUrl = userRecord.photoURL || null;
     this.role = userRecord.customClaims?.role || 'user';
+    this.namaAlamat = address?.namaAlamat || null;
+    this.detilAlamat = address?.detilAlamat || null;
   }
 
   toJSON(): UserProfileResponse {
@@ -35,6 +44,8 @@ export class UserProfileEntity {
       username: this.username,
       profileImageUrl: this.profileImageUrl,
       role: this.role,
+      namaAlamat: this.namaAlamat,
+      detilAlamat: this.detilAlamat,
     };
   }
 }

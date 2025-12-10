@@ -26,8 +26,10 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { RegisterStallOwnerDto } from './dto/register-stall-owner.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserProfileEntity } from './entities/user-profile.entity';
+import type { UserProfile } from './interfaces/user-profile.interface';
 
 // Interface untuk data user yang disimpan di Firestore
 interface UserData {
@@ -52,6 +54,7 @@ interface FirebaseAuthResponse {
 export class AuthService {
   // Nama collection di Firestore untuk menyimpan data user
   private readonly USERS_COLLECTION = 'users';
+  private readonly USER_PROFILES_COLLECTION = 'user_profiles';
   private readonly PROFILE_PICTURES_PATH = 'profile-pictures';
 
   // Allowed image types for profile picture
@@ -525,11 +528,82 @@ export class AuthService {
    */
   async getCurrentUser(uid: string): Promise<UserProfileEntity> {
     try {
+      // Fetch user from Firebase Auth
       const userRecord = await this.firebaseService.auth.getUser(uid);
-      return new UserProfileEntity(userRecord);
+
+      // Fetch address from Firestore user_profiles
+      const profileDoc = await this.firebaseService.firestore
+        .collection(this.USER_PROFILES_COLLECTION)
+        .doc(uid)
+        .get();
+
+      let address: { namaAlamat: string | null; detilAlamat: string | null } = {
+        namaAlamat: null,
+        detilAlamat: null,
+      };
+
+      if (profileDoc.exists) {
+        const profileData = profileDoc.data() as UserProfile;
+        address = {
+          namaAlamat: profileData.namaAlamat || null,
+          detilAlamat: profileData.detilAlamat || null,
+        };
+      }
+
+      return new UserProfileEntity(userRecord, address);
     } catch (error) {
       console.error('Get current user error:', error);
       throw new InternalServerErrorException('Gagal mengambil data user');
+    }
+  }
+
+  /**
+   * Update address (upsert)
+   */
+  async updateAddress(
+    uid: string,
+    dto: UpdateAddressDto,
+  ): Promise<UserProfileEntity> {
+    try {
+      const now = admin.firestore.Timestamp.now();
+
+      // Get current user from Firebase Auth
+      const userRecord = await this.firebaseService.auth.getUser(uid);
+
+      // Prepare address data
+      const addressData: Partial<UserProfile> = {
+        userId: uid,
+        namaAlamat: dto.namaAlamat || null,
+        detilAlamat: dto.detilAlamat || null,
+        updatedAt: now,
+      };
+
+      // Check if profile exists
+      const profileRef = this.firebaseService.firestore
+        .collection(this.USER_PROFILES_COLLECTION)
+        .doc(uid);
+
+      const profileDoc = await profileRef.get();
+
+      if (profileDoc.exists) {
+        // Update existing profile
+        await profileRef.update(addressData);
+      } else {
+        // Create new profile with createdAt
+        await profileRef.set({
+          ...addressData,
+          createdAt: now,
+        });
+      }
+
+      // Return updated profile
+      return new UserProfileEntity(userRecord, {
+        namaAlamat: dto.namaAlamat || null,
+        detilAlamat: dto.detilAlamat || null,
+      });
+    } catch (error) {
+      console.error('Update address error:', error);
+      throw new InternalServerErrorException('Gagal update alamat');
     }
   }
 

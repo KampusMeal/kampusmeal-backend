@@ -40,6 +40,8 @@ import type { RegisterAdminDto } from './dto/register-admin.dto';
 import { RegisterAdminSchema } from './dto/register-admin.dto';
 import type { RegisterDto } from './dto/register.dto';
 import { RegisterSchema } from './dto/register.dto';
+import type { UpdateAddressDto } from './dto/update-address.dto';
+import { UpdateAddressSchema } from './dto/update-address.dto';
 import type { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateProfileSchema } from './dto/update-profile.dto';
 import { AuthGuard } from './guards/auth.guard';
@@ -188,6 +190,34 @@ export class AuthController {
     return createSuccessResponse(
       HttpStatus.OK,
       'Berhasil mengambil profile',
+      data,
+    );
+  }
+
+  /**
+   * Endpoint: PATCH /api/v1/auth/address
+   * Update user address
+   * Requires: Bearer token di Authorization header
+   * Only accessible by: user role
+   *
+   * Request:
+   * - namaAlamat: string (min 3, max 50)
+   * - detilAlamat: string (min 10, max 500)
+   * - Both fields must be provided together or both empty to clear
+   */
+  @Patch('address')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('user')
+  @HttpCode(HttpStatus.OK)
+  async updateAddress(
+    @CurrentUser() user: { uid: string },
+    @Body(new ZodValidationPipe(UpdateAddressSchema)) dto: UpdateAddressDto,
+  ) {
+    const data = await this.authService.updateAddress(user.uid, dto);
+
+    return createSuccessResponse(
+      HttpStatus.OK,
+      'Alamat berhasil diperbarui',
       data,
     );
   }

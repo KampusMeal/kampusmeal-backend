@@ -109,7 +109,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["auth", "me"]
                 },
-                "description": "**GET /auth/me - Get Current User Profile**\\n\\n**Response:**\\n```json\\n{\\n  \\\"uid\\\": \\\"...\\\",\\n  \\\"email\\\": \\\"user@example.com\\\",\\n  \\\"username\\\": \\\"johndoe\\\",\\n  \\\"profileImageUrl\\\": \\\"https://...\\\",\\n  \\\"role\\\": \\\"user\\\"\\n}\\n```"
+                "description": "**GET /auth/me - Get Current User Profile**\\n\\n**Response:**\\n```json\\n{\\n  \\\"uid\\\": \\\"...\\\",\\n  \\\"email\\\": \\\"user@example.com\\\",\\n  \\\"username\\\": \\\"johndoe\\\",\\n  \\\"profileImageUrl\\\": \\\"https://...\\\",\\n  \\\"role\\\": \\\"user\\\",\\n  \\\"namaAlamat\\\": \\\"Rumah\\\",\\n  \\\"detilAlamat\\\": \\\"Jl. Sudirman No. 123, Jakarta\\\"\\n}\\n```\\n\\n**Note:** Fields `namaAlamat` dan `detilAlamat` bisa `null` jika user belum set alamat."
               },
               "response": []
             },
@@ -170,6 +170,34 @@
                   "path": ["auth", "profile"]
                 },
                 "description": "**PATCH /auth/profile - Update Profile (All-in-One)**\\n\\n**All-in-One Update:** Username, Profile Picture, dan Password dalam satu endpoint.\\n\\n**Body (multipart/form-data):**\\n- `username` (OPTIONAL): Edit username (3-30 chars, alphanumeric + underscore)\\n- `profileImage` (OPTIONAL): Upload/ganti foto profile (max 5MB, JPG/PNG/WebP)\\n- `oldPassword` (OPTIONAL): Password lama untuk verifikasi\\n- `newPassword` (OPTIONAL): Password baru (min 8 chars)\\n- `confirmPassword` (OPTIONAL): Konfirmasi password baru\\n\\n**Rules:**\\n- At least ONE field must be provided\\n- If changing password: `oldPassword`, `newPassword`, and `confirmPassword` are ALL REQUIRED\\n- New password must be different from old password\\n- Auto-delete old profile image when uploading new one\\n\\n**Use Cases:**\\n1. Update username only → Enable `username` field\\n2. Update profile image only → Enable `profileImage` field\\n3. Change password only → Enable all 3 password fields\\n4. Update multiple → Enable any combination\\n\\n**Response:**\\n```json\\n{\\n  \\\"uid\\\": \\\"...\\\",\\n  \\\"email\\\": \\\"user@example.com\\\",\\n  \\\"username\\\": \\\"johndoe_updated\\\",\\n  \\\"profileImageUrl\\\": \\\"https://...\\\",\\n  \\\"role\\\": \\\"user\\\"\\n}\\n```\\n\\n**Note:** User tetap logged in setelah ganti password (no forced re-login)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Address",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\\n  \\\"namaAlamat\\\": \\\"Rumah\\\",\\n  \\\"detilAlamat\\\": \\\"Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta 10110\\\"\\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/address",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "address"]
+                },
+                "description": "**PATCH /auth/address - Update User Address**\\n\\n**Body (application/json):**\\n- `namaAlamat` (OPTIONAL): Nama alamat (min 3, max 50 chars)\\n  - Contoh: \\\"Rumah\\\", \\\"Kos\\\", \\\"Kantor\\\"\\n- `detilAlamat` (OPTIONAL): Detail alamat lengkap (min 10, max 500 chars)\\n  - Contoh: \\\"Jl. Sudirman No. 123, Jakarta\\\"\\n\\n**Rules:**\\n- Jika salah satu field diisi, KEDUANYA harus diisi\\n- Bisa kosongkan keduanya untuk hapus alamat\\n- Update bersifat upsert (create if not exists, update if exists)\\n\\n**Use Cases:**\\n1. Set alamat pertama kali\\n2. Update alamat yang sudah ada\\n3. Clear alamat (kirim kedua field kosong)\\n\\n**Response:**\\n```json\\n{\\n  \\\"uid\\\": \\\"...\\\",\\n  \\\"email\\\": \\\"user@example.com\\\",\\n  \\\"username\\\": \\\"johndoe\\\",\\n  \\\"profileImageUrl\\\": \\\"https://...\\\",\\n  \\\"role\\\": \\\"user\\\",\\n  \\\"namaAlamat\\\": \\\"Rumah\\\",\\n  \\\"detilAlamat\\\": \\\"Jl. Sudirman No. 123, Jakarta\\\"\\n}\\n```\\n\\n**Note:** Alamat disimpan di Firestore collection `user_profiles`."
               },
               "response": []
             }
