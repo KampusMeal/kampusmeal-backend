@@ -7,6 +7,7 @@
 export interface UpdateMenuItemDto {
   name?: string;
   description?: string;
+  category?: string[];
   price?: number;
   isAvailable?: boolean;
 }

@@ -53,6 +53,15 @@ export class MenuItemsController {
       throw new Error('Stall ID tidak ditemukan di user data');
     }
 
+    // Parse category dari JSON string
+    if (dto.category && typeof dto.category === 'string') {
+      try {
+        dto.category = JSON.parse(dto.category);
+      } catch (error) {
+        throw new Error('Format category tidak valid. Harus berupa JSON array');
+      }
+    }
+
     const data = await this.menuItemsService.create(
       user.stallId,
       dto as CreateMenuItemDto,
@@ -124,17 +133,26 @@ export class MenuItemsController {
   async update(
     @CurrentUser() user: { uid: string; stallId?: string },
     @Param('id') id: string,
-    @Body() dto: UpdateMenuItemDto,
+    @Body() dto: any, // Any karena multipart/form-data
     @UploadedFile() image?: Express.Multer.File,
   ) {
     if (!user.stallId) {
       throw new Error('Stall ID tidak ditemukan di user data');
     }
 
+    // Parse category dari JSON string jika ada
+    if (dto.category && typeof dto.category === 'string') {
+      try {
+        dto.category = JSON.parse(dto.category);
+      } catch (error) {
+        throw new Error('Format category tidak valid. Harus berupa JSON array');
+      }
+    }
+
     const data = await this.menuItemsService.update(
       id,
       user.stallId,
-      dto,
+      dto as UpdateMenuItemDto,
       image,
     );
 

@@ -10,6 +10,7 @@ export interface MenuItem {
   stallId: string; // Reference ke stall
   name: string;
   description: string;
+  category: string[]; // Kategori menu (e.g., ["nasi", "ayam"], ["minuman", "dingin"])
   price: number;
   imageUrl: string;
   isAvailable: boolean;
@@ -22,6 +23,7 @@ export interface MenuItemResponse {
   stallId: string;
   name: string;
   description: string;
+  category: string[]; // Kategori menu (array)
   price: number;
   imageUrl: string;
   isAvailable: boolean;

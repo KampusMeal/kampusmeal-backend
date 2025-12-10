@@ -72,6 +72,7 @@ export class MenuItemsService {
         stallId,
         name: dto.name,
         description: dto.description,
+        category: dto.category,
         price: dto.price,
         imageUrl,
         isAvailable: dto.isAvailable ?? true,
@@ -413,6 +414,27 @@ export class MenuItemsService {
       errors.push('Deskripsi maksimal 500 karakter');
     }
 
+    // Validate category
+    if (!dto.category || !Array.isArray(dto.category)) {
+      errors.push('Kategori wajib diisi dan harus berupa array');
+    } else if (dto.category.length < 1) {
+      errors.push('Minimal 1 kategori harus dipilih');
+    } else if (dto.category.length > 5) {
+      errors.push('Maksimal 5 kategori');
+    } else {
+      // Validate setiap item dalam array
+      for (let i = 0; i < dto.category.length; i++) {
+        const cat = dto.category[i];
+        if (typeof cat !== 'string') {
+          errors.push(`Kategori ke-${i + 1} harus berupa teks`);
+        } else if (cat.trim().length < 2) {
+          errors.push(`Kategori ke-${i + 1} minimal 2 karakter`);
+        } else if (cat.trim().length > 50) {
+          errors.push(`Kategori ke-${i + 1} maksimal 50 karakter`);
+        }
+      }
+    }
+
     // Validate price
     if (dto.price === undefined || dto.price === null) {
       errors.push('Harga wajib diisi');
@@ -459,6 +481,29 @@ export class MenuItemsService {
         errors.push('Deskripsi minimal 10 karakter');
       } else if (dto.description.trim().length > 500) {
         errors.push('Deskripsi maksimal 500 karakter');
+      }
+    }
+
+    // Validate category (optional)
+    if (dto.category !== undefined) {
+      if (!Array.isArray(dto.category)) {
+        errors.push('Kategori harus berupa array');
+      } else if (dto.category.length < 1) {
+        errors.push('Minimal 1 kategori harus dipilih');
+      } else if (dto.category.length > 5) {
+        errors.push('Maksimal 5 kategori');
+      } else {
+        // Validate setiap item dalam array
+        for (let i = 0; i < dto.category.length; i++) {
+          const cat = dto.category[i];
+          if (typeof cat !== 'string') {
+            errors.push(`Kategori ke-${i + 1} harus berupa teks`);
+          } else if (cat.trim().length < 2) {
+            errors.push(`Kategori ke-${i + 1} minimal 2 karakter`);
+          } else if (cat.trim().length > 50) {
+            errors.push(`Kategori ke-${i + 1} maksimal 50 karakter`);
+          }
+        }
       }
     }
 

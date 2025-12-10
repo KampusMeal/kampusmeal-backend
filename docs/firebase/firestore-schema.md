@@ -112,6 +112,8 @@ Collection untuk menyimpan menu items dari setiap warung.
   stallId: string; // ID warung (foreign key ke stalls)
   name: string; // Nama menu (3-100 chars)
   description: string; // Deskripsi menu (10-500 chars)
+  category: string[]; // Array kategori menu (1-5 items, tiap item 2-50 chars)
+                      // Contoh: ["Nasi", "Ayam"], ["Minuman", "Dingin"]
   price: number; // Harga (100-1,000,000)
   imageUrl: string; // URL gambar menu dari Firebase Storage
   isAvailable: boolean; // Status ketersediaan (default: true)
@@ -119,6 +121,22 @@ Collection untuk menyimpan menu items dari setiap warung.
   updatedAt: Timestamp; // Waktu terakhir diupdate
 }
 ```
+
+**Menu Category Array Examples:**
+
+- Nasi & Ayam: ["Nasi", "Ayam"]
+- Mie & Bakso: ["Mie", "Bakso"]
+- Minuman: ["Minuman", "Dingin"] atau ["Minuman", "Panas"]
+- Gorengan: ["Gorengan", "Snack"]
+- Ayam Pedas: ["Ayam", "Pedas"]
+- Single category: ["Dessert"] atau ["Pizza"]
+
+**Benefits of Array:**
+
+- Multiple tags for better searchability
+- Can filter by ingredient or characteristic
+- More flexible and descriptive
+- Example: "Nasi Goreng Ayam" can be tagged with ["Nasi", "Ayam", "Goreng"]
 
 ---
 

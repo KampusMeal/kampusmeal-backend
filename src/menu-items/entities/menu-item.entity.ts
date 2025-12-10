@@ -3,7 +3,6 @@
  * Entity untuk format response yang konsisten
  */
 
-import * as admin from 'firebase-admin';
 import type {
   MenuItem,
   MenuItemResponse,
@@ -14,6 +13,7 @@ export class MenuItemEntity {
   stallId: string;
   name: string;
   description: string;
+  category: string[];
   price: number;
   imageUrl: string;
   isAvailable: boolean;
@@ -25,6 +25,7 @@ export class MenuItemEntity {
     this.stallId = menuItem.stallId;
     this.name = menuItem.name;
     this.description = menuItem.description;
+    this.category = menuItem.category;
     this.price = menuItem.price;
     this.imageUrl = menuItem.imageUrl;
     this.isAvailable = menuItem.isAvailable;
@@ -52,6 +53,7 @@ export class MenuItemEntity {
       stallId: this.stallId,
       name: this.name,
       description: this.description,
+      category: this.category,
       price: this.price,
       imageUrl: this.imageUrl,
       isAvailable: this.isAvailable,

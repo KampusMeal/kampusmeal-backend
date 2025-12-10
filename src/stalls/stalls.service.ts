@@ -216,6 +216,7 @@ export class StallsService {
         id: item.id,
         name: item.name,
         description: item.description,
+        category: item.category,
         price: item.price,
         imageUrl: item.imageUrl,
         isAvailable: item.isAvailable,

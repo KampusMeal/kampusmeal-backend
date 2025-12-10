@@ -1165,6 +1165,12 @@
                       "type": "text"
                     },
                     {
+                      "key": "category",
+                      "value": "[\"Nasi\", \"Ayam\"]",
+                      "type": "text",
+                      "description": "Array kategori menu (JSON string). Contoh: [\"Nasi\", \"Ayam\"], [\"Minuman\", \"Dingin\"]"
+                    },
+                    {
                       "key": "price",
                       "value": "15000",
                       "type": "text"
@@ -1187,7 +1193,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["stalls", "my-stall", "menu-items"]
                 },
-                "description": "**POST /stalls/my-stall/menu-items - Create Menu Item**\\n\\n**Required:**\\n- `name`: Nama menu (3-100 karakter)\\n- `description`: Deskripsi menu (10-500 karakter)\\n- `price`: Harga (100-1.000.000, integer)\\n- `image`: File gambar menu (JPG/PNG/WebP, max 5MB)\\n\\n**Optional:**\\n- `isAvailable`: Status ketersediaan (default: true)\\n\\n**Response:**\\nMenu item yang baru dibuat dengan imageUrl dari Firebase Storage"
+                "description": "**POST /stalls/my-stall/menu-items - Create Menu Item**\\n\\n**Required:**\\n- `name`: Nama menu (3-100 karakter)\\n- `description`: Deskripsi menu (10-500 karakter)\\n- `category`: Array kategori (JSON string, 1-5 items, tiap item 2-50 karakter). Contoh: [\\\"Nasi\\\", \\\"Ayam\\\"], [\\\"Minuman\\\", \\\"Dingin\\\"]\\n- `price`: Harga (100-1.000.000, integer)\\n- `image`: File gambar menu (JPG/PNG/WebP, max 5MB)\\n\\n**Optional:**\\n- `isAvailable`: Status ketersediaan (default: true)\\n\\n**Category Array Examples:**\\n- [\\\"Nasi\\\", \\\"Ayam\\\"] - Menu nasi dengan ayam\\n- [\\\"Mie\\\", \\\"Bakso\\\"] - Mie bakso\\n- [\\\"Minuman\\\", \\\"Dingin\\\"] - Minuman dingin\\n- [\\\"Ayam\\\", \\\"Pedas\\\"] - Menu ayam pedas\\n- [\\\"Gorengan\\\", \\\"Snack\\\"] - Gorengan/camilan\\n- [\\\"Dessert\\\"] - Single category juga bisa\\n\\n**Note:** Kirim sebagai JSON string di FormData\\n\\n**Response:**\\nMenu item dengan imageUrl dan category array dari Firebase Storage"
               },
               "response": []
             },
@@ -1225,7 +1231,12 @@
                 "url": {
                   "raw": "{{base_url}}/stalls/my-stall/menu-items/{{menu_item_id}}",
                   "host": ["{{base_url}}"],
-                  "path": ["stalls", "my-stall", "menu-items", "{{menu_item_id}}"]
+                  "path": [
+                    "stalls",
+                    "my-stall",
+                    "menu-items",
+                    "{{menu_item_id}}"
+                  ]
                 },
                 "description": "**GET /stalls/my-stall/menu-items/:id - Get Single Menu Item**\\n\\nGet detail menu item by ID.\\n\\n**Note:** Akan verify ownership otomatis"
               },
@@ -1258,6 +1269,13 @@
                       "disabled": true
                     },
                     {
+                      "key": "category",
+                      "value": "[\"Ayam\", \"Pedas\"]",
+                      "type": "text",
+                      "description": "Array kategori baru (JSON string, optional). Contoh: [\"Ayam\", \"Pedas\"]",
+                      "disabled": true
+                    },
+                    {
                       "key": "price",
                       "value": "18000",
                       "type": "text",
@@ -1280,9 +1298,14 @@
                 "url": {
                   "raw": "{{base_url}}/stalls/my-stall/menu-items/{{menu_item_id}}",
                   "host": ["{{base_url}}"],
-                  "path": ["stalls", "my-stall", "menu-items", "{{menu_item_id}}"]
+                  "path": [
+                    "stalls",
+                    "my-stall",
+                    "menu-items",
+                    "{{menu_item_id}}"
+                  ]
                 },
-                "description": "**PATCH /stalls/my-stall/menu-items/:id - Update Menu Item**\\n\\n**All fields optional:**\\n- `name`: Nama menu baru\\n- `description`: Deskripsi baru\\n- `price`: Harga baru\\n- `isAvailable`: Status ketersediaan\\n- `image`: Gambar baru (akan hapus gambar lama)\\n\\n**Note:** Jika upload image baru, gambar lama akan dihapus otomatis"
+                "description": "**PATCH /stalls/my-stall/menu-items/:id - Update Menu Item**\\n\\n**All fields optional:**\\n- `name`: Nama menu baru\\n- `description`: Deskripsi baru\\n- `category`: Array kategori baru (JSON string, 1-5 items). Contoh: [\\\"Ayam\\\", \\\"Pedas\\\"], [\\\"Minuman\\\", \\\"Panas\\\"]\\n- `price`: Harga baru\\n- `isAvailable`: Status ketersediaan\\n- `image`: Gambar baru (akan hapus gambar lama)\\n\\n**Note:**\\n- Kirim category sebagai JSON string\\n- Jika upload image baru, gambar lama akan dihapus otomatis"
               },
               "response": []
             },
@@ -1300,7 +1323,12 @@
                 "url": {
                   "raw": "{{base_url}}/stalls/my-stall/menu-items/{{menu_item_id}}",
                   "host": ["{{base_url}}"],
-                  "path": ["stalls", "my-stall", "menu-items", "{{menu_item_id}}"]
+                  "path": [
+                    "stalls",
+                    "my-stall",
+                    "menu-items",
+                    "{{menu_item_id}}"
+                  ]
                 },
                 "description": "**DELETE /stalls/my-stall/menu-items/:id - Delete Menu Item**\\n\\nHapus menu item dari warung sendiri.\\n\\n**WARNING:**\\n- Data menu dihapus permanen\\n- Gambar juga dihapus dari Storage\\n- Tidak bisa di-restore!"
               },
@@ -1380,7 +1408,13 @@
                 "url": {
                   "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/confirm",
                   "host": ["{{base_url}}"],
-                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "confirm"]
+                  "path": [
+                    "orders",
+                    "my-stall",
+                    "orders",
+                    "{{order_id}}",
+                    "confirm"
+                  ]
                 },
                 "description": "**PATCH /orders/my-stall/orders/:orderId/confirm - Konfirmasi Pembayaran**\\n\\n**Syarat:** Status order harus `waiting_confirmation`\\n\\n**Effect:** Status berubah jadi `processing` (pesanan mulai dibuat).\\n\\n**Use Case:** Owner sudah cek mutasi rekening dan uang sudah masuk. Owner mulai menyiapkan pesanan.\\n\\n**NEW STATUS FLOW:**\\n1. `waiting_confirmation` → Owner cek bukti bayar\\n2. `processing` (setelah confirm) → Owner sedang buat pesanan\\n3. `ready` (setelah mark ready) → Pesanan jadi, siap diambil/dikirim\\n4. `completed` (setelah complete) → Pesanan sudah sampai/diambil"
               },
@@ -1408,7 +1442,13 @@
                 "url": {
                   "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/reject",
                   "host": ["{{base_url}}"],
-                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "reject"]
+                  "path": [
+                    "orders",
+                    "my-stall",
+                    "orders",
+                    "{{order_id}}",
+                    "reject"
+                  ]
                 },
                 "description": "**PATCH /orders/my-stall/orders/:orderId/reject - Tolak Pembayaran**\\n\\n**Body:**\\n- `reason`: Alasan penolakan (required, 10-500 chars)\\n\\n**Syarat:** Status order harus `waiting_confirmation`\\n\\n**Effect:** Status berubah jadi `rejected`.\\n\\n**Use Case:** Uang belum masuk, bukti palsu, atau bukti buram."
               },
@@ -1428,7 +1468,13 @@
                 "url": {
                   "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/ready",
                   "host": ["{{base_url}}"],
-                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "ready"]
+                  "path": [
+                    "orders",
+                    "my-stall",
+                    "orders",
+                    "{{order_id}}",
+                    "ready"
+                  ]
                 },
                 "description": "**PATCH /orders/my-stall/orders/:orderId/ready - Tandai Pesanan Siap**\\n\\n**NEW ENDPOINT!**\\n\\n**Syarat:** Status order harus `processing`\\n\\n**Effect:** Status berubah jadi `ready`.\\n\\n**Use Case:** Pesanan sudah jadi/siap. Untuk:\\n- Pickup: Pesanan siap diambil user\\n- Delivery: Pesanan siap dikirim (atau sedang dalam perjalanan)\\n\\n**Note:** Setelah ready, owner harus complete setelah pesanan diambil/diterima user."
               },
@@ -1448,7 +1494,13 @@
                 "url": {
                   "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/complete",
                   "host": ["{{base_url}}"],
-                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "complete"]
+                  "path": [
+                    "orders",
+                    "my-stall",
+                    "orders",
+                    "{{order_id}}",
+                    "complete"
+                  ]
                 },
                 "description": "**PATCH /orders/my-stall/orders/:orderId/complete - Selesaikan Pesanan**\\n\\n**Syarat:** Status order harus `ready`\\n\\n**Effect:** Status berubah jadi `completed`.\\n\\n**Use Case:** \\n- Pickup: User sudah mengambil pesanan\\n- Delivery: Pesanan sudah sampai/diterima user\\n\\n**After Completed:** User bisa submit review untuk order ini."
               },
