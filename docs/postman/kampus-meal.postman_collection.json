@@ -258,6 +258,12 @@
                       "disabled": true
                     },
                     {
+                      "key": "foodTypes",
+                      "value": "sate,mie,pizza",
+                      "description": "Filter by food types (comma-separated)",
+                      "disabled": true
+                    },
+                    {
                       "key": "page",
                       "value": "1"
                     },
@@ -275,7 +281,7 @@
                     }
                   ]
                 },
-                "description": "**GET /stalls - Listing Warung dengan Pagination**\n\n**Query Parameters:**\n- `search` (optional): Keyword pencarian berdasarkan nama warung\n- `category` (optional): Filter berdasarkan kategori (Indonesian Food, Fast Food, Beverages, dll)\n- `minRating` (optional): Filter minimal rating (0-5)\n- `page` (default: 1): Halaman ke berapa\n- `limit` (default: 10): Jumlah item per halaman\n- `sortBy` (default: rating): Field untuk sorting (rating, name, createdAt)\n- `sortOrder` (default: desc): Urutan sorting (asc/desc)\n\n**Response Structure:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"description\": \"string\",\n      \"imageUrl\": \"string\",\n      \"category\": \"string\",\n      \"rating\": number,\n      \"totalReviews\": number\n    }\n  ],\n  \"meta\": {\n    \"total\": number,\n    \"page\": number,\n    \"limit\": number,\n    \"totalPages\": number\n  }\n}\n```\n\n**Note:** Response TIDAK include `ownerId`, `createdAt`, `updatedAt` untuk privacy dan simplicity."
+                "description": "**GET /stalls - Listing Warung dengan Pagination**\n\n**Query Parameters:**\n- `search` (optional): Keyword pencarian berdasarkan nama warung\n- `category` (optional): Filter berdasarkan kategori (Indonesian Food, Fast Food, Beverages, dll)\n- `minRating` (optional): Filter minimal rating (0-5)\n- `foodTypes` (optional): Filter berdasarkan jenis makanan (comma-separated, e.g., \"sate,mie,pizza\"). Warung akan tampil jika punya minimal 1 jenis yang cocok.\n- `page` (default: 1): Halaman ke berapa\n- `limit` (default: 10): Jumlah item per halaman\n- `sortBy` (default: rating): Field untuk sorting (rating, name, createdAt)\n- `sortOrder` (default: desc): Urutan sorting (asc/desc)\n\n**Filter Examples:**\n- `?category=Indonesian Food` - Filter warung kategori Indonesian Food\n- `?minRating=4.0` - Filter warung rating minimal 4.0\n- `?foodTypes=sate,mie` - Filter warung yang jual sate ATAU mie (any match)\n- `?foodTypes=sate&minRating=4.0` - Kombinasi: warung jual sate dengan rating minimal 4.0\n\n**Response Structure:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"description\": \"string\",\n      \"imageUrl\": \"string\",\n      \"category\": \"string\",\n      \"foodTypes\": [\"sate\", \"mie\", \"pizza\", \"ayam\"],\n      \"rating\": number,\n      \"totalReviews\": number\n    }\n  ],\n  \"meta\": {\n    \"total\": number,\n    \"page\": number,\n    \"limit\": number,\n    \"totalPages\": number\n  }\n}\n```\n\n**Note:** Response TIDAK include `ownerId`, `createdAt`, `updatedAt` untuk privacy dan simplicity."
               },
               "response": []
             },
@@ -295,7 +301,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["stalls", "{{stall_id}}"]
                 },
-                "description": "**GET /stalls/:id - Detail Warung**\n\n**Parameter:**\n- `:id` (path param): ID warung yang ingin dilihat\n\n**Response Structure:**\n```json\n{\n  \"data\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"category\": \"string\",\n    \"rating\": number,\n    \"totalReviews\": number,\n    \"menuItems\": [...]\n  }\n}\n```\n\n**Note:**\n- `menuItems` berisi daftar menu lengkap\n- QRIS untuk pembayaran tidak ada di endpoint ini, ambil dari GET /cart saat checkout"
+                "description": "**GET /stalls/:id - Detail Warung**\n\n**Parameter:**\n- `:id` (path param): ID warung yang ingin dilihat\n\n**Response Structure:**\n```json\n{\n  \"data\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"category\": \"string\",\n    \"foodTypes\": [\"sate\", \"mie\", \"pizza\", \"ayam\"],\n    \"rating\": number,\n    \"totalReviews\": number,\n    \"menuItems\": [...]\n  }\n}\n```\n\n**Note:**\n- `menuItems` berisi daftar menu lengkap\n- QRIS untuk pembayaran tidak ada di endpoint ini, ambil dari GET /cart saat checkout"
               },
               "response": []
             },
@@ -321,7 +327,7 @@
                     }
                   ]
                 },
-                "description": "**GET /stalls?search=keyword - Search Warung**\n\n**Query Parameter:**\n- `search`: Keyword pencarian (case-insensitive, search di nama warung)\n\n**Contoh:**\n- `?search=siti` → cari warung dengan nama mengandung \"siti\"\n- `?search=nasi` → cari warung dengan nama mengandung \"nasi\"\n\n**Note:**\n- Search dilakukan client-side (Firestore limitation)\n- Bisa kombinasikan dengan filter lain (category, minRating, dll)\n- Response structure sama dengan GET /stalls (listing)"
+                "description": "**GET /stalls?search=keyword - Search Warung**\n\n**Query Parameter:**\n- `search`: Keyword pencarian (case-insensitive, search di nama warung)\n\n**Contoh:**\n- `?search=siti` → cari warung dengan nama mengandung \"siti\"\n- `?search=nasi` → cari warung dengan nama mengandung \"nasi\"\n\n**Kombinasi dengan Filter Lain:**\n- `?search=siti&foodTypes=sate` → Cari warung nama \"siti\" yang jual sate\n- `?search=warung&category=Indonesian Food&minRating=4.0` → Cari warung Indonesia dengan nama \"warung\" rating 4+\n\n**Note:**\n- Search dilakukan client-side (Firestore limitation)\n- Bisa kombinasikan dengan filter lain (category, minRating, foodTypes)\n- Response structure sama dengan GET /stalls (listing)"
               },
               "response": []
             }
@@ -904,6 +910,12 @@
                       "description": "Kategori warung"
                     },
                     {
+                      "key": "stallFoodTypes",
+                      "value": "[\"sate\", \"mie\", \"pizza\", \"ayam\"]",
+                      "type": "text",
+                      "description": "Jenis makanan yang dijual (JSON array, 1-10 items) - REQUIRED"
+                    },
+                    {
                       "key": "stallImage",
                       "type": "file",
                       "src": [],
@@ -1069,6 +1081,13 @@
                       "key": "category",
                       "value": "Fast Food",
                       "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "foodTypes",
+                      "value": "[\"sate\", \"mie\", \"bakso\"]",
+                      "type": "text",
+                      "description": "Jenis makanan yang dijual (JSON array, 1-10 items, optional)",
                       "disabled": true
                     },
                     {

@@ -33,6 +33,13 @@ export const CreateStallSchema = z.object({
     message: `Kategori harus salah satu dari: ${categoryValues.join(', ')}`,
   }),
 
+  // Jenis makanan yang dijual: array of string, min 1, max 10 items
+  // Contoh: ["sate", "mie", "pizza", "ayam"]
+  foodTypes: z
+    .array(z.string().trim().min(1, 'Jenis makanan tidak boleh kosong'))
+    .min(1, 'Minimal 1 jenis makanan harus dipilih')
+    .max(10, 'Maksimal 10 jenis makanan'),
+
   // Note: image divalidasi di controller dengan FileInterceptor
   // dan di service dengan validateImageFile()
 });

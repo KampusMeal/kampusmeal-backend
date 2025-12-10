@@ -30,6 +30,13 @@ export const QueryStallSchema = z.object({
         .optional(),
     ),
 
+  // Filter by food types (comma-separated, e.g., "sate,mie,pizza")
+  foodTypes: z
+    .string()
+    .optional()
+    .transform((val) => (val ? val.split(',').map((s) => s.trim()) : undefined))
+    .pipe(z.array(z.string().min(1)).optional()),
+
   // Pagination - page number (default 1)
   page: z
     .string()

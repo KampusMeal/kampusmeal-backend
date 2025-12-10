@@ -89,6 +89,7 @@ export class StallsService {
         stallImageUrl,
         qrisImageUrl,
         category: dto.category,
+        foodTypes: dto.foodTypes, // Jenis makanan yang dijual
         rating: 0, // Initial rating 0
         totalReviews: 0,
         createdAt: now,
@@ -149,6 +150,21 @@ export class StallsService {
         stalls = stalls.filter((stall) =>
           stall.name.toLowerCase().includes(searchLower),
         );
+      }
+
+      // Client-side filter by food types (any match)
+      if (query.foodTypes && query.foodTypes.length > 0) {
+        const requestedFoodTypes = query.foodTypes; // Store in const for TypeScript
+        stalls = stalls.filter((stall) => {
+          // Check if stall has any of the requested food types
+          const stallFoodTypes = stall.foodTypes || [];
+          return requestedFoodTypes.some((queryType) =>
+            stallFoodTypes.some(
+              (stallType) =>
+                stallType.toLowerCase() === queryType.toLowerCase(),
+            ),
+          );
+        });
       }
 
       // Pagination

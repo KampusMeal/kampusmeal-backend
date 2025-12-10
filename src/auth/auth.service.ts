@@ -411,6 +411,7 @@ export class AuthService {
       stallName,
       stallDescription,
       stallCategory,
+      stallFoodTypes,
     } = dto;
 
     try {
@@ -454,6 +455,7 @@ export class AuthService {
         name: stallName,
         description: stallDescription,
         category: stallCategory,
+        foodTypes: stallFoodTypes,
       };
 
       const stall = await this.stallsService.create(
@@ -478,6 +480,7 @@ export class AuthService {
           stallImageUrl: stall.stallImageUrl,
           qrisImageUrl: stall.qrisImageUrl,
           category: stall.category,
+          foodTypes: stall.foodTypes,
         },
       };
     } catch (error: unknown) {

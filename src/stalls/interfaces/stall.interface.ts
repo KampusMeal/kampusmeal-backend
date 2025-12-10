@@ -13,6 +13,7 @@ export interface Stall {
   stallImageUrl: string; // URL gambar warung dari Firebase Storage
   qrisImageUrl: string; // URL QR Code pembayaran
   category: string; // Kategori warung (string, bukan enum - untuk flexibility)
+  foodTypes: string[]; // Jenis makanan yang dijual (e.g., ["sate", "mie", "pizza", "ayam"])
   rating: number; // Rating 0.0 - 5.0
   totalReviews?: number; // Total jumlah review (optional, untuk future)
   createdAt: admin.firestore.Timestamp; // Waktu dibuat
@@ -42,6 +43,7 @@ export interface StallResponse {
   stallImageUrl: string;
   qrisImageUrl: string;
   category: string;
+  foodTypes: string[]; // Jenis makanan yang dijual
   rating: number;
   totalReviews?: number;
   createdAt: string; // ISO string

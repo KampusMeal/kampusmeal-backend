@@ -36,6 +36,13 @@ export const UpdateStallSchema = z.object({
     })
     .optional(),
 
+  // Jenis makanan: optional, array of string, min 1, max 10 items
+  foodTypes: z
+    .array(z.string().trim().min(1, 'Jenis makanan tidak boleh kosong'))
+    .min(1, 'Minimal 1 jenis makanan harus dipilih')
+    .max(10, 'Maksimal 10 jenis makanan')
+    .optional(),
+
   // Note: image handling sama seperti create
   // Optional - kalau ada file baru, replace yang lama
 });

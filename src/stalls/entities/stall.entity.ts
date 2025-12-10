@@ -34,6 +34,7 @@ export class StallListEntity {
   description: string;
   stallImageUrl: string;
   category: string;
+  foodTypes: string[];
   rating: number;
   totalReviews: number;
 
@@ -43,6 +44,7 @@ export class StallListEntity {
     this.description = stall.description;
     this.stallImageUrl = stall.stallImageUrl;
     this.category = stall.category;
+    this.foodTypes = stall.foodTypes || [];
     this.rating = stall.rating;
     this.totalReviews = stall.totalReviews || 0;
   }
@@ -59,6 +61,7 @@ export class StallDetailEntity {
   name: string;
   description: string;
   category: string;
+  foodTypes: string[];
   rating: number;
   totalReviews: number;
   menuItems: MenuItem[];
@@ -68,6 +71,7 @@ export class StallDetailEntity {
     this.name = stall.name;
     this.description = stall.description;
     this.category = stall.category;
+    this.foodTypes = stall.foodTypes || [];
     this.rating = stall.rating;
     this.totalReviews = stall.totalReviews || 0;
     this.menuItems = menuItems;
@@ -87,6 +91,7 @@ export class StallEntity {
   stallImageUrl: string;
   qrisImageUrl: string;
   category: string;
+  foodTypes: string[];
   rating: number;
   totalReviews?: number;
   createdAt: string;
@@ -100,6 +105,7 @@ export class StallEntity {
     this.stallImageUrl = stall.stallImageUrl;
     this.qrisImageUrl = stall.qrisImageUrl;
     this.category = stall.category;
+    this.foodTypes = stall.foodTypes || [];
     this.rating = stall.rating;
     this.totalReviews = stall.totalReviews;
 
@@ -130,6 +136,7 @@ export class StallEntity {
       stallImageUrl: this.stallImageUrl,
       qrisImageUrl: this.qrisImageUrl,
       category: this.category,
+      foodTypes: this.foodTypes,
       rating: this.rating,
       totalReviews: this.totalReviews,
       createdAt: this.createdAt,
