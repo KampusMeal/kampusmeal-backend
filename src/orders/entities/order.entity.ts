@@ -12,6 +12,10 @@ export class OrderEntity {
   stallId: string;
   stallName: string;
   items: Order['items'];
+  itemsTotal: number;
+  appFee: number;
+  deliveryMethod: Order['deliveryMethod'];
+  deliveryFee: number;
   totalPrice: number;
   paymentProofUrl: string | null;
   status: Order['status'];
@@ -25,6 +29,10 @@ export class OrderEntity {
     this.stallId = order.stallId;
     this.stallName = order.stallName;
     this.items = order.items;
+    this.itemsTotal = order.itemsTotal;
+    this.appFee = order.appFee;
+    this.deliveryMethod = order.deliveryMethod;
+    this.deliveryFee = order.deliveryFee;
     this.totalPrice = order.totalPrice;
     this.paymentProofUrl = order.paymentProofUrl;
     this.status = order.status;
@@ -53,6 +61,10 @@ export class OrderEntity {
       stallId: this.stallId,
       stallName: this.stallName,
       items: this.items,
+      itemsTotal: this.itemsTotal,
+      appFee: this.appFee,
+      deliveryMethod: this.deliveryMethod,
+      deliveryFee: this.deliveryFee,
       totalPrice: this.totalPrice,
       paymentProofUrl: this.paymentProofUrl,
       status: this.status,

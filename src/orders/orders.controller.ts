@@ -27,6 +27,8 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { createSuccessResponse } from '../common/helpers/response.helper';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import type { CheckoutDto } from './dto/checkout.dto';
+import { CheckoutSchema } from './dto/checkout.dto';
 import type { QueryOrderDto } from './dto/query-order.dto';
 import { QueryOrderSchema } from './dto/query-order.dto';
 import type { RejectOrderDto } from './dto/reject-order.dto';
@@ -42,6 +44,11 @@ export class OrdersController {
   /**
    * POST /orders/checkout
    * User checkout dari cart + upload bukti pembayaran
+   *
+   * Request:
+   * - Content-Type: multipart/form-data
+   * - Fields: deliveryMethod (pickup | delivery)
+   * - File: proof (bukti pembayaran)
    */
   @Post('checkout')
   @Roles('user')
@@ -49,9 +56,10 @@ export class OrdersController {
   @UseInterceptors(FileInterceptor('proof'))
   async checkout(
     @CurrentUser() user: { uid: string },
+    @Body(new ZodValidationPipe(CheckoutSchema)) dto: CheckoutDto,
     @UploadedFile() proof: Express.Multer.File,
   ) {
-    const data = await this.ordersService.checkout(user.uid, proof);
+    const data = await this.ordersService.checkout(user.uid, dto, proof);
 
     return createSuccessResponse(
       HttpStatus.CREATED,

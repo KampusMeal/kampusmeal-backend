@@ -167,7 +167,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["stalls", "{{stall_id}}"]
                 },
-                "description": "**GET /stalls/:id - Detail Warung**\n\n**Parameter:**\n- `:id` (path param): ID warung yang ingin dilihat\n\n**Response Structure:**\n```json\n{\n  \"data\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"qrisImageUrl\": \"https://...\", // <--- QR Code Pembayaran\n    \"category\": \"string\",\n    \"rating\": number,\n    \"totalReviews\": number,\n    \"menuItems\": [...]\n  }\n}\n```\n\n**Note:**\n- Gunakan `qrisImageUrl` untuk menampilkan QR Code pembayaran di halaman checkout\n- `menuItems` berisi daftar menu lengkap"
+                "description": "**GET /stalls/:id - Detail Warung**\n\n**Parameter:**\n- `:id` (path param): ID warung yang ingin dilihat\n\n**Response Structure:**\n```json\n{\n  \"data\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"category\": \"string\",\n    \"rating\": number,\n    \"totalReviews\": number,\n    \"menuItems\": [...]\n  }\n}\n```\n\n**Note:**\n- `menuItems` berisi daftar menu lengkap\n- QRIS untuk pembayaran tidak ada di endpoint ini, ambil dari GET /cart saat checkout"
               },
               "response": []
             },
@@ -246,7 +246,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["cart"]
                 },
-                "description": "**GET /cart - Get My Cart**\\n\\nGet cart dengan semua items.\\n\\n**Response jika cart ada:**\\n```json\\n{\\n  \\\"userId\\\": \\\"...\\\",\\n  \\\"stallId\\\": \\\"...\\\",\\n  \\\"stallName\\\": \\\"Warung Bu Siti\\\",\\n  \\\"items\\\": [\\n    {\\n      \\\"menuItemId\\\": \\\"...\\\",\\n      \\\"name\\\": \\\"Nasi Goreng\\\",\\n      \\\"price\\\": 15000,\\n      \\\"imageUrl\\\": \\\"...\\\",\\n      \\\"quantity\\\": 2,\\n      \\\"subtotal\\\": 30000\\n    }\\n  ],\\n  \\\"totalPrice\\\": 30000\\n}\\n```\\n\\n**Response jika cart kosong:** `null`"
+                "description": "**GET /cart - Get My Cart**\\n\\nGet cart dengan semua items + QRIS pembayaran.\\n\\n**Response jika cart ada:**\\n```json\\n{\\n  \\\"userId\\\": \\\"...\\\",\\n  \\\"stallId\\\": \\\"...\\\",\\n  \\\"stallName\\\": \\\"Warung Bu Siti\\\",\\n  \\\"qris\\\": \\\"https://...\\\",\\n  \\\"items\\\": [\\n    {\\n      \\\"menuItemId\\\": \\\"...\\\",\\n      \\\"name\\\": \\\"Nasi Goreng\\\",\\n      \\\"price\\\": 15000,\\n      \\\"imageUrl\\\": \\\"...\\\",\\n      \\\"quantity\\\": 2,\\n      \\\"subtotal\\\": 30000\\n    }\\n  ],\\n  \\\"totalPrice\\\": 30000\\n}\\n```\\n\\n**Response jika cart kosong:** `null`\\n\\n**Note:** Field `qris` berisi URL gambar QRIS dari warung untuk pembayaran"
               },
               "response": []
             },
@@ -353,6 +353,12 @@
                   "mode": "formdata",
                   "formdata": [
                     {
+                      "key": "deliveryMethod",
+                      "value": "pickup",
+                      "description": "pickup atau delivery",
+                      "type": "text"
+                    },
+                    {
                       "key": "proof",
                       "type": "file",
                       "src": []
@@ -364,7 +370,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["orders", "checkout"]
                 },
-                "description": "**POST /orders/checkout - Checkout & Upload Bukti**\\n\\n**Flow:**\\n1. User upload bukti pembayaran saat checkout\\n2. Backend validate cart & file\\n3. Create order dengan status `waiting_confirmation`\\n4. Clear cart otomatis\\n\\n**Body:**\\n- `proof`: File gambar bukti transfer (Required)\\n\\n**Response:**\\nOrder created dengan status `waiting_confirmation` dan `paymentProofUrl` terisi."
+                "description": "**POST /orders/checkout - Checkout & Upload Bukti**\\n\\n**Flow:**\\n1. User pilih metode pengambilan (pickup/delivery)\\n2. User upload bukti pembayaran\\n3. Backend calculate fees:\\n   - Items total: dari cart\\n   - App fee: Rp 1.000 (fixed)\\n   - Delivery fee: Rp 5.000 (jika delivery), Rp 0 (jika pickup)\\n   - Total: itemsTotal + appFee + deliveryFee\\n4. Create order dengan status `waiting_confirmation`\\n5. Clear cart otomatis\\n\\n**Body:**\\n- `deliveryMethod`: \\\"pickup\\\" atau \\\"delivery\\\" (Required)\\n- `proof`: File gambar bukti transfer (Required)\\n\\n**Response:**\\nOrder created dengan breakdown:\\n- `itemsTotal`: Total harga items\\n- `appFee`: 1000\\n- `deliveryMethod`: pickup/delivery\\n- `deliveryFee`: 0 atau 5000\\n- `totalPrice`: Grand total\\n- `status`: waiting_confirmation\\n- `paymentProofUrl`: URL bukti bayar"
               },
               "response": []
             },

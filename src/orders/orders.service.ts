@@ -21,11 +21,12 @@ import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import { CartService } from '../cart/cart.service';
 import { FirebaseService } from '../firebase/firebase.service';
+import type { CheckoutDto } from './dto/checkout.dto';
 import type { QueryOrderDto } from './dto/query-order.dto';
 import type { RejectOrderDto } from './dto/reject-order.dto';
 import { OrderEntity } from './entities/order.entity';
 import type { Order } from './interfaces/order.interface';
-import { OrderStatus } from './interfaces/order.interface';
+import { DeliveryMethod, OrderStatus } from './interfaces/order.interface';
 
 @Injectable()
 export class OrdersService {
@@ -43,6 +44,10 @@ export class OrdersService {
   // Max file size: 5MB
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024;
 
+  // Fees
+  private readonly APP_FEE = 1000; // Biaya aplikasi per transaksi
+  private readonly DELIVERY_FEE = 5000; // Biaya antar jika delivery
+
   constructor(
     private firebaseService: FirebaseService,
     private cartService: CartService,
@@ -53,6 +58,7 @@ export class OrdersService {
    */
   async checkout(
     userId: string,
+    dto: CheckoutDto,
     file: Express.Multer.File,
   ): Promise<OrderEntity> {
     // Validate file first
@@ -72,6 +78,13 @@ export class OrdersService {
       // Upload payment proof
       const paymentProofUrl = await this.uploadImage(file, orderId);
 
+      // Calculate fees
+      const itemsTotal = cart.totalPrice; // Total dari cart items
+      const appFee = this.APP_FEE; // 1000
+      const deliveryFee =
+        dto.deliveryMethod === 'delivery' ? this.DELIVERY_FEE : 0;
+      const totalPrice = itemsTotal + appFee + deliveryFee;
+
       // Create order dari cart snapshot
       const now = admin.firestore.Timestamp.now();
       const orderData: Order = {
@@ -80,7 +93,14 @@ export class OrdersService {
         stallId: cart.stallId,
         stallName: cart.stallName,
         items: cart.items,
-        totalPrice: cart.totalPrice,
+        itemsTotal,
+        appFee,
+        deliveryMethod:
+          dto.deliveryMethod === 'delivery'
+            ? DeliveryMethod.DELIVERY
+            : DeliveryMethod.PICKUP,
+        deliveryFee,
+        totalPrice,
         paymentProofUrl, // URL dari bukti pembayaran
         status: OrderStatus.WAITING_CONFIRMATION, // Langsung waiting confirmation
         rejectionReason: null,

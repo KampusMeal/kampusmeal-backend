@@ -29,6 +29,14 @@ export enum OrderStatus {
 }
 
 /**
+ * DeliveryMethod - Metode pengambilan pesanan
+ */
+export enum DeliveryMethod {
+  PICKUP = 'pickup',
+  DELIVERY = 'delivery',
+}
+
+/**
  * Order - Document order
  */
 export interface Order {
@@ -39,7 +47,14 @@ export interface Order {
 
   // Snapshot dari cart
   items: OrderItem[];
-  totalPrice: number;
+  itemsTotal: number; // Total harga items aja
+
+  // Fees
+  appFee: number; // Biaya aplikasi (1000)
+  deliveryMethod: DeliveryMethod;
+  deliveryFee: number; // Biaya antar (5000 jika delivery, 0 jika pickup)
+
+  totalPrice: number; // itemsTotal + appFee + deliveryFee
 
   // Payment
   paymentProofUrl: string | null;
@@ -58,6 +73,10 @@ export interface OrderResponse {
   stallId: string;
   stallName: string;
   items: OrderItem[];
+  itemsTotal: number;
+  appFee: number;
+  deliveryMethod: DeliveryMethod;
+  deliveryFee: number;
   totalPrice: number;
   paymentProofUrl: string | null;
   status: OrderStatus;
