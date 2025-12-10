@@ -57,20 +57,27 @@ export class StallsService {
   async create(
     ownerId: string,
     dto: CreateStallDto,
-    file: Express.Multer.File,
+    stallImageFile: Express.Multer.File,
+    qrisImageFile: Express.Multer.File,
   ): Promise<StallEntity> {
     // Manual validation karena Zod tidak support multipart/form-data
     this.validateCreateDto(dto);
 
-    // Validasi file
-    this.validateImageFile(file);
+    // Validasi stall image file (required)
+    this.validateImageFile(stallImageFile);
+
+    // Validasi QRIS image file (required)
+    this.validateImageFile(qrisImageFile);
 
     try {
       // Generate ID untuk stall
       const stallId = uuidv4();
 
-      // Upload image ke Storage
-      const imageUrl = await this.uploadImage(file, stallId);
+      // Upload stall image ke Storage
+      const stallImageUrl = await this.uploadImage(stallImageFile, stallId);
+
+      // Upload QRIS image ke Storage
+      const qrisImageUrl = await this.uploadQrisImage(qrisImageFile, stallId);
 
       // Prepare data untuk Firestore
       const now = admin.firestore.Timestamp.now();
@@ -79,7 +86,8 @@ export class StallsService {
         ownerId,
         name: dto.name,
         description: dto.description,
-        imageUrl,
+        stallImageUrl,
+        qrisImageUrl,
         category: dto.category,
         rating: 0, // Initial rating 0
         totalReviews: 0,
@@ -265,7 +273,8 @@ export class StallsService {
     id: string,
     ownerId: string,
     dto: UpdateStallDto,
-    file?: Express.Multer.File,
+    stallImageFile?: Express.Multer.File,
+    qrisImageFile?: Express.Multer.File,
   ): Promise<StallEntity> {
     // Check ownership
     await this.checkOwnership(id, ownerId);
@@ -278,21 +287,34 @@ export class StallsService {
         .get();
 
       const currentStall = doc.data() as Stall;
-      let imageUrl = currentStall.imageUrl;
+      let stallImageUrl = currentStall.stallImageUrl;
+      let qrisImageUrl = currentStall.qrisImageUrl;
 
-      // Kalau ada file baru, upload dan delete yang lama
-      if (file) {
-        this.validateImageFile(file);
+      // Kalau ada stall image baru, upload dan delete yang lama
+      if (stallImageFile) {
+        this.validateImageFile(stallImageFile);
         // Delete old image
-        await this.deleteImage(currentStall.imageUrl);
+        await this.deleteImage(currentStall.stallImageUrl);
         // Upload new image
-        imageUrl = await this.uploadImage(file, id);
+        stallImageUrl = await this.uploadImage(stallImageFile, id);
+      }
+
+      // Kalau ada QRIS image baru, upload dan delete yang lama
+      if (qrisImageFile) {
+        this.validateImageFile(qrisImageFile);
+        // Delete old QRIS image if exists
+        if (currentStall.qrisImageUrl) {
+          await this.deleteImage(currentStall.qrisImageUrl);
+        }
+        // Upload new QRIS image
+        qrisImageUrl = await this.uploadQrisImage(qrisImageFile, id);
       }
 
       // Prepare update data
       const updateData: Partial<Stall> = {
         ...dto,
-        imageUrl,
+        stallImageUrl,
+        qrisImageUrl,
         updatedAt: admin.firestore.Timestamp.now(),
       };
 
@@ -330,7 +352,7 @@ export class StallsService {
     await this.checkOwnership(id, ownerId);
 
     try {
-      // Get stall data untuk ambil imageUrl
+      // Get stall data untuk ambil stallImageUrl
       const doc = await this.firebaseService.firestore
         .collection(this.STALLS_COLLECTION)
         .doc(id)
@@ -338,8 +360,12 @@ export class StallsService {
 
       const stall = doc.data() as Stall;
 
-      // Delete image dari Storage
-      await this.deleteImage(stall.imageUrl);
+      // Delete stall image dari Storage
+      await this.deleteImage(stall.stallImageUrl);
+      // Delete QRIS image if exists
+      if (stall.qrisImageUrl) {
+        await this.deleteImage(stall.qrisImageUrl);
+      }
 
       // Delete document dari Firestore
       await this.firebaseService.firestore
@@ -365,7 +391,8 @@ export class StallsService {
   async updateMyStall(
     ownerId: string,
     dto: UpdateStallDto,
-    file?: Express.Multer.File,
+    stallImageFile?: Express.Multer.File,
+    qrisImageFile?: Express.Multer.File,
   ): Promise<StallEntity> {
     try {
       // Get stall milik owner
@@ -382,19 +409,31 @@ export class StallsService {
       const stallDoc = snapshot.docs[0];
       const stallId = stallDoc.id;
       const currentStall = stallDoc.data() as Stall;
-      let imageUrl = currentStall.imageUrl;
+      let stallImageUrl = currentStall.stallImageUrl;
+      let qrisImageUrl = currentStall.qrisImageUrl;
 
-      // Kalau ada file baru, upload dan delete yang lama
-      if (file) {
-        this.validateImageFile(file);
-        await this.deleteImage(currentStall.imageUrl);
-        imageUrl = await this.uploadImage(file, stallId);
+      // Kalau ada stall image baru, upload dan delete yang lama
+      if (stallImageFile) {
+        this.validateImageFile(stallImageFile);
+        await this.deleteImage(currentStall.stallImageUrl);
+        stallImageUrl = await this.uploadImage(stallImageFile, stallId);
+      }
+
+      // Kalau ada QRIS image baru, upload dan delete yang lama
+      if (qrisImageFile) {
+        this.validateImageFile(qrisImageFile);
+        // Delete old QRIS image if exists
+        if (currentStall.qrisImageUrl) {
+          await this.deleteImage(currentStall.qrisImageUrl);
+        }
+        qrisImageUrl = await this.uploadQrisImage(qrisImageFile, stallId);
       }
 
       // Prepare update data
       const updateData: Partial<Stall> = {
         ...dto,
-        imageUrl,
+        stallImageUrl,
+        qrisImageUrl,
         updatedAt: admin.firestore.Timestamp.now(),
       };
 
@@ -441,8 +480,12 @@ export class StallsService {
       const stallDoc = snapshot.docs[0];
       const stall = stallDoc.data() as Stall;
 
-      // Delete image dari Storage
-      await this.deleteImage(stall.imageUrl);
+      // Delete stall image dari Storage
+      await this.deleteImage(stall.stallImageUrl);
+      // Delete QRIS image if exists
+      if (stall.qrisImageUrl) {
+        await this.deleteImage(stall.qrisImageUrl);
+      }
 
       // Delete document dari Firestore
       await this.firebaseService.firestore
@@ -515,6 +558,49 @@ export class StallsService {
     } catch (error) {
       console.error('Upload image error:', error);
       throw new InternalServerErrorException('Gagal mengupload gambar');
+    }
+  }
+
+  /**
+   * HELPER: Upload QRIS image ke Firebase Storage
+   */
+  private async uploadQrisImage(
+    file: Express.Multer.File,
+    stallId: string,
+  ): Promise<string> {
+    try {
+      const bucket = this.firebaseService.storage.bucket();
+
+      // Generate unique filename
+      const filename = this.generateImageFileName(file.originalname);
+      const filePath = `${this.STORAGE_PATH}/${stallId}/qris/${filename}`;
+
+      // Create file reference
+      const fileRef = bucket.file(filePath);
+
+      // Upload file
+      await fileRef.save(file.buffer, {
+        metadata: {
+          contentType: file.mimetype,
+          metadata: {
+            stallId,
+            uploadedAt: new Date().toISOString(),
+            originalName: file.originalname,
+            type: 'qris',
+          },
+        },
+      });
+
+      // Make file publicly accessible
+      await fileRef.makePublic();
+
+      // Get public URL
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload QRIS image error:', error);
+      throw new InternalServerErrorException('Gagal mengupload gambar QRIS');
     }
   }
 

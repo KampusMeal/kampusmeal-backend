@@ -383,6 +383,7 @@ export class AuthService {
   async registerStallOwner(
     dto: RegisterStallOwnerDto,
     stallImage: Express.Multer.File,
+    qrisImage: Express.Multer.File,
   ) {
     const {
       username,
@@ -440,6 +441,7 @@ export class AuthService {
         userRecord.uid,
         stallDto,
         stallImage,
+        qrisImage,
       );
 
       // Step 5: Return user + stall data
@@ -454,7 +456,8 @@ export class AuthService {
           id: stall.id,
           name: stall.name,
           description: stall.description,
-          imageUrl: stall.imageUrl,
+          stallImageUrl: stall.stallImageUrl,
+          qrisImageUrl: stall.qrisImageUrl,
           category: stall.category,
         },
       };

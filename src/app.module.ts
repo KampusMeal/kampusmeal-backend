@@ -19,6 +19,7 @@ import { StallsModule } from './stalls/stalls.module';
 
 import { CartModule } from './cart/cart.module';
 import { MenuItemsModule } from './menu-items/menu-items.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -42,6 +43,9 @@ import { MenuItemsModule } from './menu-items/menu-items.module';
 
     // Cart module untuk fitur shopping cart
     CartModule,
+
+    // Orders module untuk fitur orders & payment
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

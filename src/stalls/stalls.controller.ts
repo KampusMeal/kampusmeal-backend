@@ -12,6 +12,7 @@
  */
 
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -23,11 +24,15 @@ import {
   Post,
   Query,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -97,18 +102,37 @@ export class StallsController {
    * PATCH /stalls/my-stall
    * Update MY stall - seamless, no ID needed
    * Accessible by: stall_owner only
+   *
+   * Request:
+   * - Content-Type: multipart/form-data
+   * - Fields (all optional): name, description, category
+   * - Files (optional): image (stall image), qrisImage (QRIS payment)
    */
   @Patch('my-stall')
   @UseGuards(RolesGuard)
   @Roles('stall_owner')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'qrisImage', maxCount: 1 },
+    ]),
+  )
   async updateMyStall(
     @CurrentUser() user: AuthUser,
     @Body() dto: UpdateStallDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFiles()
+    files?: {
+      image?: Express.Multer.File[];
+      qrisImage?: Express.Multer.File[];
+    },
   ) {
-    const stall = await this.stallsService.updateMyStall(user.uid, dto, file);
+    const stall = await this.stallsService.updateMyStall(
+      user.uid,
+      dto,
+      files?.image?.[0],
+      files?.qrisImage?.[0],
+    );
 
     return createSuccessResponse(
       HttpStatus.OK,
@@ -159,21 +183,45 @@ export class StallsController {
    * Request:
    * - Content-Type: multipart/form-data
    * - Fields: name, description, category
-   * - File: image (JPG, PNG, WebP, max 5MB)
+   * - Files: image (stall image, required), qrisImage (QRIS payment, required)
    */
   @Post()
   @UseGuards(RolesGuard)
   @Roles('admin')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'qrisImage', maxCount: 1 },
+    ]),
+  )
   // Note: ZodValidationPipe tidak support multipart/form-data
   // Validasi dilakukan manual di service layer
   async create(
     @CurrentUser() user: AuthUser,
     @Body() dto: CreateStallDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles()
+    files: {
+      image?: Express.Multer.File[];
+      qrisImage?: Express.Multer.File[];
+    },
   ) {
-    const stall = await this.stallsService.create(user.uid, dto, file);
+    // Validate image is required
+    if (!files.image || !files.image[0]) {
+      throw new BadRequestException('Foto warung (image) wajib diupload');
+    }
+
+    // Validate qrisImage is required
+    if (!files.qrisImage || !files.qrisImage[0]) {
+      throw new BadRequestException('Foto QRIS (qrisImage) wajib diupload');
+    }
+
+    const stall = await this.stallsService.create(
+      user.uid,
+      dto,
+      files.image[0],
+      files.qrisImage[0],
+    );
 
     return createSuccessResponse(
       HttpStatus.CREATED,
@@ -185,27 +233,42 @@ export class StallsController {
   /**
    * PATCH /stalls/:id
    * Update stall
-   * Accessible by: Owner only
+   * Accessible by: Admin only
    *
    * Request:
    * - Content-Type: multipart/form-data
    * - Fields (all optional): name, description, category
-   * - File (optional): image
+   * - Files (optional): image (stall image), qrisImage (QRIS payment)
    */
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'qrisImage', maxCount: 1 },
+    ]),
+  )
   // Note: ZodValidationPipe tidak support multipart/form-data
   // Validasi dilakukan manual di service layer
   async update(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
     @Body() dto: UpdateStallDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFiles()
+    files?: {
+      image?: Express.Multer.File[];
+      qrisImage?: Express.Multer.File[];
+    },
   ) {
-    const stall = await this.stallsService.update(id, user.uid, dto, file);
+    const stall = await this.stallsService.update(
+      id,
+      user.uid,
+      dto,
+      files?.image?.[0],
+      files?.qrisImage?.[0],
+    );
 
     return createSuccessResponse(
       HttpStatus.OK,

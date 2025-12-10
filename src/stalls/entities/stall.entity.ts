@@ -32,7 +32,7 @@ export class StallListEntity {
   id: string;
   name: string;
   description: string;
-  imageUrl: string;
+  stallImageUrl: string;
   category: string;
   rating: number;
   totalReviews: number;
@@ -41,7 +41,7 @@ export class StallListEntity {
     this.id = stall.id;
     this.name = stall.name;
     this.description = stall.description;
-    this.imageUrl = stall.imageUrl;
+    this.stallImageUrl = stall.stallImageUrl;
     this.category = stall.category;
     this.rating = stall.rating;
     this.totalReviews = stall.totalReviews || 0;
@@ -58,6 +58,7 @@ export class StallDetailEntity {
   id: string;
   name: string;
   description: string;
+  qrisImageUrl: string;
   category: string;
   rating: number;
   totalReviews: number;
@@ -67,6 +68,7 @@ export class StallDetailEntity {
     this.id = stall.id;
     this.name = stall.name;
     this.description = stall.description;
+    this.qrisImageUrl = stall.qrisImageUrl;
     this.category = stall.category;
     this.rating = stall.rating;
     this.totalReviews = stall.totalReviews || 0;
@@ -84,7 +86,8 @@ export class StallEntity {
   ownerId: string;
   name: string;
   description: string;
-  imageUrl: string;
+  stallImageUrl: string;
+  qrisImageUrl: string;
   category: string;
   rating: number;
   totalReviews?: number;
@@ -96,7 +99,8 @@ export class StallEntity {
     this.ownerId = stall.ownerId;
     this.name = stall.name;
     this.description = stall.description;
-    this.imageUrl = stall.imageUrl;
+    this.stallImageUrl = stall.stallImageUrl;
+    this.qrisImageUrl = stall.qrisImageUrl;
     this.category = stall.category;
     this.rating = stall.rating;
     this.totalReviews = stall.totalReviews;
@@ -107,14 +111,14 @@ export class StallEntity {
       stall.createdAt &&
       typeof stall.createdAt === 'object' &&
       'toDate' in stall.createdAt
-        ? (stall.createdAt as admin.firestore.Timestamp).toDate().toISOString()
+        ? stall.createdAt.toDate().toISOString()
         : String(stall.createdAt);
 
     this.updatedAt =
       stall.updatedAt &&
       typeof stall.updatedAt === 'object' &&
       'toDate' in stall.updatedAt
-        ? (stall.updatedAt as admin.firestore.Timestamp).toDate().toISOString()
+        ? stall.updatedAt.toDate().toISOString()
         : String(stall.updatedAt);
   }
 
@@ -125,7 +129,8 @@ export class StallEntity {
       ownerId: this.ownerId,
       name: this.name,
       description: this.description,
-      imageUrl: this.imageUrl,
+      stallImageUrl: this.stallImageUrl,
+      qrisImageUrl: this.qrisImageUrl,
       category: this.category,
       rating: this.rating,
       totalReviews: this.totalReviews,

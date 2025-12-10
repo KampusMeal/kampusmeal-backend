@@ -11,17 +11,22 @@
  */
 
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpCode,
   HttpStatus,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { createSuccessResponse } from '../common/helpers/response.helper';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { AuthService } from './auth.service';
@@ -89,18 +94,41 @@ export class AuthController {
    * - Content-Type: multipart/form-data
    * - Fields: username, email, password, confirmPassword,
    *           stallName, stallDescription, stallCategory
-   * - File: stallImage
+   * - Files: stallImage (required), qrisImage (required)
    */
   @Post('register-stall-owner')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('admin')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('stallImage'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'stallImage', maxCount: 1 },
+      { name: 'qrisImage', maxCount: 1 },
+    ]),
+  )
   async registerStallOwner(
     @Body() dto: any, // Any karena multipart/form-data
-    @UploadedFile() stallImage: Express.Multer.File,
+    @UploadedFiles()
+    files: {
+      stallImage?: Express.Multer.File[];
+      qrisImage?: Express.Multer.File[];
+    },
   ) {
-    const data = await this.authService.registerStallOwner(dto, stallImage);
+    // Validate stallImage is required
+    if (!files.stallImage || !files.stallImage[0]) {
+      throw new BadRequestException('Foto warung (stallImage) wajib diupload');
+    }
+
+    // Validate qrisImage is required
+    if (!files.qrisImage || !files.qrisImage[0]) {
+      throw new BadRequestException('Foto QRIS (qrisImage) wajib diupload');
+    }
+
+    const data = await this.authService.registerStallOwner(
+      dto,
+      files.stallImage[0],
+      files.qrisImage[0],
+    );
 
     return createSuccessResponse(
       HttpStatus.CREATED,

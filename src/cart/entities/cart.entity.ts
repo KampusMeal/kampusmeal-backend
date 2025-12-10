@@ -27,14 +27,14 @@ export class CartEntity {
       cart.createdAt &&
       typeof cart.createdAt === 'object' &&
       'toDate' in cart.createdAt
-        ? (cart.createdAt as admin.firestore.Timestamp).toDate().toISOString()
+        ? cart.createdAt.toDate().toISOString()
         : String(cart.createdAt);
 
     this.updatedAt =
       cart.updatedAt &&
       typeof cart.updatedAt === 'object' &&
       'toDate' in cart.updatedAt
-        ? (cart.updatedAt as admin.firestore.Timestamp).toDate().toISOString()
+        ? cart.updatedAt.toDate().toISOString()
         : String(cart.updatedAt);
   }
 

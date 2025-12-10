@@ -10,7 +10,8 @@ export interface Stall {
   ownerId: string; // UID dari user yang memiliki warung
   name: string; // Nama warung
   description: string; // Deskripsi warung
-  imageUrl: string; // URL gambar dari Firebase Storage
+  stallImageUrl: string; // URL gambar warung dari Firebase Storage
+  qrisImageUrl: string; // URL QR Code pembayaran
   category: string; // Kategori warung (string, bukan enum - untuk flexibility)
   rating: number; // Rating 0.0 - 5.0
   totalReviews?: number; // Total jumlah review (optional, untuk future)
@@ -38,7 +39,8 @@ export interface StallResponse {
   ownerId: string;
   name: string;
   description: string;
-  imageUrl: string;
+  stallImageUrl: string;
+  qrisImageUrl: string;
   category: string;
   rating: number;
   totalReviews?: number;

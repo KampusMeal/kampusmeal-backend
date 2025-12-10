@@ -34,18 +34,14 @@ export class MenuItemEntity {
       menuItem.createdAt &&
       typeof menuItem.createdAt === 'object' &&
       'toDate' in menuItem.createdAt
-        ? (menuItem.createdAt as admin.firestore.Timestamp)
-            .toDate()
-            .toISOString()
+        ? menuItem.createdAt.toDate().toISOString()
         : String(menuItem.createdAt);
 
     this.updatedAt =
       menuItem.updatedAt &&
       typeof menuItem.updatedAt === 'object' &&
       'toDate' in menuItem.updatedAt
-        ? (menuItem.updatedAt as admin.firestore.Timestamp)
-            .toDate()
-            .toISOString()
+        ? menuItem.updatedAt.toDate().toISOString()
         : String(menuItem.updatedAt);
   }
 

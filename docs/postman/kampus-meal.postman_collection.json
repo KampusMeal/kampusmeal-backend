@@ -167,7 +167,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["stalls", "{{stall_id}}"]
                 },
-                "description": "**GET /stalls/:id - Detail Warung**\n\n**Parameter:**\n- `:id` (path param): ID warung yang ingin dilihat\n\n**Response Structure:**\n```json\n{\n  \"data\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"category\": \"string\",\n    \"rating\": number,\n    \"totalReviews\": number,\n    \"menuItems\": [\n      {\n        \"id\": \"string\",\n        \"name\": \"string\",\n        \"description\": \"string\",\n        \"price\": number,\n        \"imageUrl\": \"string\",\n        \"isAvailable\": boolean\n      }\n    ]\n  }\n}\n```\n\n**Note:**\n- Response TIDAK include `ownerId`, `imageUrl` (stall image), `createdAt`, `updatedAt`\n- `menuItems` adalah array (bisa kosong [] jika belum ada menu)\n- Field `menuItems` akan diisi saat fitur menu management sudah diimplementasi"
+                "description": "**GET /stalls/:id - Detail Warung**\n\n**Parameter:**\n- `:id` (path param): ID warung yang ingin dilihat\n\n**Response Structure:**\n```json\n{\n  \"data\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"qrisImageUrl\": \"https://...\", // <--- QR Code Pembayaran\n    \"category\": \"string\",\n    \"rating\": number,\n    \"totalReviews\": number,\n    \"menuItems\": [...]\n  }\n}\n```\n\n**Note:**\n- Gunakan `qrisImageUrl` untuk menampilkan QR Code pembayaran di halaman checkout\n- `menuItems` berisi daftar menu lengkap"
               },
               "response": []
             },
@@ -315,6 +315,141 @@
                   "path": ["cart"]
                 },
                 "description": "**DELETE /cart - Clear Cart**\\n\\nHapus seluruh cart dengan semua items.\\n\\n**Use case:** User batalkan order atau mau ganti warung"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Orders & Payment",
+          "item": [
+            {
+              "name": "Checkout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                      "    pm.environment.set(\"order_id\", jsonData.data.id);",
+                      "    console.log(\"Order ID saved: \" + jsonData.data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "proof",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/orders/checkout",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "checkout"]
+                },
+                "description": "**POST /orders/checkout - Checkout & Upload Bukti**\\n\\n**Flow:**\\n1. User upload bukti pembayaran saat checkout\\n2. Backend validate cart & file\\n3. Create order dengan status `waiting_confirmation`\\n4. Clear cart otomatis\\n\\n**Body:**\\n- `proof`: File gambar bukti transfer (Required)\\n\\n**Response:**\\nOrder created dengan status `waiting_confirmation` dan `paymentProofUrl` terisi."
+              },
+              "response": []
+            },
+            {
+              "name": "Re-upload Payment Proof (Revisi)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "proof",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/orders/{{order_id}}/upload-proof",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "{{order_id}}", "upload-proof"]
+                },
+                "description": "**PATCH /orders/:orderId/upload-proof - Revisi Bukti Transfer**\\n\\n**Use Case:**\\nJika order ditolak (`REJECTED`) oleh penjual karena bukti buram/salah, user bisa upload ulang bukti di sini.\\n\\n**Rules:**\\n- Hanya order dengan status `REJECTED` yang bisa upload ulang\\n- Status akan kembali jadi `waiting_confirmation`"
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Orders",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders?page=1&limit=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "status",
+                      "value": "completed",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "**GET /orders - List My Orders (History)**\\n\\n**Query Parameters:**\\n- `status` (optional): Filter by status\\n  - `pending_payment`\\n  - `waiting_confirmation`\\n  - `confirmed`\\n  - `rejected`\\n  - `completed`\\n- `page` (default: 1): Page number\\n- `limit` (default: 10, max: 100): Items per page\\n\\n**Use Cases:**\\n- History lengkap: no filter\\n- History selesai: `?status=completed`\\n- Order ditolak: `?status=rejected`\\n- Pending payment: `?status=pending_payment`\\n\\n**Response:**\\nArray of orders dengan pagination meta"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/{{order_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "{{order_id}}"]
+                },
+                "description": "**GET /orders/:orderId - Detail Order**\\n\\nGet detail order termasuk:\\n- Items snapshot (nama, harga saat checkout)\\n- Payment proof URL\\n- Status terkini\\n- Rejection reason (jika ditolak)\\n\\n**Use Case:**\\nCek status order, lihat alasan penolakan, download bukti pembayaran"
               },
               "response": []
             }
@@ -497,7 +632,13 @@
                       "key": "stallImage",
                       "type": "file",
                       "src": [],
-                      "description": "Gambar warung (JPG, PNG, WebP, max 5MB)"
+                      "description": "Gambar warung (JPG, PNG, WebP, max 5MB) - REQUIRED"
+                    },
+                    {
+                      "key": "qrisImage",
+                      "type": "file",
+                      "src": [],
+                      "description": "Gambar QRIS pembayaran (JPG, PNG, WebP, max 5MB) - REQUIRED"
                     }
                   ]
                 },
@@ -506,7 +647,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["auth", "register-stall-owner"]
                 },
-                "description": "**Admin only**: Register pemilik warung + buat stall sekaligus.\n\nOutput:\n- User account (stall_owner role)\n- Stall data\n- Username & password untuk dikasih ke pemilik warung"
+                "description": "**Admin only**: Register pemilik warung + buat stall sekaligus.\n\nFiles:\n- stallImage (required): Foto warung\n- qrisImage (required): Foto QRIS pembayaran\n\nOutput:\n- User account (stall_owner role)\n- Stall data\n- Username & password untuk dikasih ke pemilik warung"
               },
               "response": []
             }
@@ -639,7 +780,14 @@
                       "key": "image",
                       "type": "file",
                       "src": [],
-                      "description": "Gambar baru (optional)",
+                      "description": "Gambar warung baru (optional)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "qrisImage",
+                      "type": "file",
+                      "src": [],
+                      "description": "Gambar QRIS pembayaran baru (optional)",
                       "disabled": true
                     }
                   ]
@@ -649,7 +797,7 @@
                   "host": ["{{base_url}}"],
                   "path": ["stalls", "my-stall"]
                 },
-                "description": "**Seamless!** Update warung tanpa ID. Semua field optional."
+                "description": "**Seamless!** Update warung tanpa ID. Semua field optional.\n\nFiles:\n- image (optional): Foto warung baru\n- qrisImage (optional): Foto QRIS pembayaran baru"
               },
               "response": []
             },
@@ -841,6 +989,134 @@
                   "path": ["stalls", "my-stall", "menu-items", "{{menu_item_id}}"]
                 },
                 "description": "**DELETE /stalls/my-stall/menu-items/:id - Delete Menu Item**\\n\\nHapus menu item dari warung sendiri.\\n\\n**WARNING:**\\n- Data menu dihapus permanen\\n- Gambar juga dihapus dari Storage\\n- Tidak bisa di-restore!"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Order Management",
+          "item": [
+            {
+              "name": "List Incoming Orders",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/my-stall/orders?page=1&limit=10&status=waiting_confirmation",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "my-stall", "orders"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "status",
+                      "value": "waiting_confirmation",
+                      "description": "Filter by status"
+                    }
+                  ]
+                },
+                "description": "**GET /orders/my-stall/orders - List Incoming Orders**\\n\\nLihat pesanan yang masuk ke warung.\\n\\n**Query Parameters:**\\n- `status`: Filter status (`waiting_confirmation`, `confirmed`, `completed`, `rejected`, `pending_payment`)\\n- `page`: Page number\\n- `limit`: Items per page\\n\\n**Use Case:**\\n- Cek pesanan baru yang butuh konfirmasi (`waiting_confirmation`)\\n- Cek pesanan yang sedang diproses (`confirmed`)\\n- Cek history selesai (`completed`)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order Detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "my-stall", "orders", "{{order_id}}"]
+                },
+                "description": "**GET /orders/my-stall/orders/:orderId - Detail Order**\\n\\nLihat detail pesanan spesifik, termasuk bukti pembayaran user."
+              },
+              "response": []
+            },
+            {
+              "name": "Confirm Payment",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/confirm",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "confirm"]
+                },
+                "description": "**PATCH /orders/my-stall/orders/:orderId/confirm - Konfirmasi Pembayaran**\\n\\n**Syarat:** Status order harus `waiting_confirmation`\\n\\n**Effect:** Status berubah jadi `confirmed`.\\n\\n**Use Case:** Owner sudah cek mutasi rekening dan uang sudah masuk."
+              },
+              "response": []
+            },
+            {
+              "name": "Reject Payment",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Bukti transfer tidak terbaca / buram. Mohon upload ulang.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/reject",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "reject"]
+                },
+                "description": "**PATCH /orders/my-stall/orders/:orderId/reject - Tolak Pembayaran**\\n\\n**Body:**\\n- `reason`: Alasan penolakan (required, 10-500 chars)\\n\\n**Syarat:** Status order harus `waiting_confirmation`\\n\\n**Effect:** Status berubah jadi `rejected`.\\n\\n**Use Case:** Uang belum masuk, bukti palsu, atau bukti buram."
+              },
+              "response": []
+            },
+            {
+              "name": "Complete Order",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/my-stall/orders/{{order_id}}/complete",
+                  "host": ["{{base_url}}"],
+                  "path": ["orders", "my-stall", "orders", "{{order_id}}", "complete"]
+                },
+                "description": "**PATCH /orders/my-stall/orders/:orderId/complete - Selesaikan Pesanan**\\n\\n**Syarat:** Status order harus `confirmed`\\n\\n**Effect:** Status berubah jadi `completed`.\\n\\n**Use Case:** Makanan sudah diambil oleh user atau diantar."
               },
               "response": []
             }
