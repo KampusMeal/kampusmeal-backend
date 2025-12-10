@@ -8,7 +8,7 @@ import type { Order, OrderResponse } from '../interfaces/order.interface';
 
 export class OrderEntity {
   id: string;
-  userId: string;
+  username: string;
   stallId: string;
   stallName: string;
   stallImageUrl: string;
@@ -27,7 +27,7 @@ export class OrderEntity {
 
   constructor(order: Order) {
     this.id = order.id;
-    this.userId = order.userId;
+    this.username = order.username;
     this.stallId = order.stallId;
     this.stallName = order.stallName;
     this.stallImageUrl = order.stallImageUrl;
@@ -61,7 +61,7 @@ export class OrderEntity {
   toJSON(): OrderResponse {
     return {
       id: this.id,
-      userId: this.userId,
+      username: this.username,
       stallId: this.stallId,
       stallName: this.stallName,
       stallImageUrl: this.stallImageUrl,

@@ -80,6 +80,18 @@ export class OrdersService {
       // Upload payment proof
       const paymentProofUrl = await this.uploadImage(file, orderId);
 
+      // Get user info for snapshot (username)
+      const userDoc = await this.firebaseService.firestore
+        .collection('users')
+        .doc(userId)
+        .get();
+
+      if (!userDoc.exists) {
+        throw new BadRequestException('User tidak ditemukan');
+      }
+
+      const user = userDoc.data() as { username: string };
+
       // Get stall info for snapshot
       const stallDoc = await this.firebaseService.firestore
         .collection('stalls')
@@ -104,6 +116,7 @@ export class OrdersService {
       const orderData: Order = {
         id: orderId,
         userId,
+        username: user.username, // Snapshot username saat checkout
         stallId: cart.stallId,
         stallName: cart.stallName,
         stallImageUrl: stall.stallImageUrl, // Snapshot foto warung

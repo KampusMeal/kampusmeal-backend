@@ -44,6 +44,7 @@ export enum DeliveryMethod {
 export interface Order {
   id: string;
   userId: string;
+  username: string; // Snapshot username saat checkout
   stallId: string;
   stallName: string;
   stallImageUrl: string; // Snapshot foto warung saat checkout
@@ -75,7 +76,7 @@ export interface Order {
 
 export interface OrderResponse {
   id: string;
-  userId: string;
+  username: string;
   stallId: string;
   stallName: string;
   stallImageUrl: string;
