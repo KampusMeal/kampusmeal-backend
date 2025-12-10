@@ -10,6 +10,7 @@
  */
 
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -18,12 +19,15 @@ import {
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as admin from 'firebase-admin';
+import { v4 as uuidv4 } from 'uuid';
 import { FirebaseService } from '../firebase/firebase.service';
 import { StallsService } from '../stalls/stalls.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { RegisterStallOwnerDto } from './dto/register-stall-owner.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UserProfileEntity } from './entities/user-profile.entity';
 
 // Interface untuk data user yang disimpan di Firestore
 interface UserData {
@@ -48,6 +52,18 @@ interface FirebaseAuthResponse {
 export class AuthService {
   // Nama collection di Firestore untuk menyimpan data user
   private readonly USERS_COLLECTION = 'users';
+  private readonly PROFILE_PICTURES_PATH = 'profile-pictures';
+
+  // Allowed image types for profile picture
+  private readonly ALLOWED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+  ];
+
+  // Max file size: 5MB
+  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   constructor(
     private firebaseService: FirebaseService,
@@ -501,6 +517,196 @@ export class AuthService {
       throw new InternalServerErrorException(
         'Gagal mendaftarkan pemilik warung',
       );
+    }
+  }
+
+  /**
+   * Get current user profile
+   */
+  async getCurrentUser(uid: string): Promise<UserProfileEntity> {
+    try {
+      const userRecord = await this.firebaseService.auth.getUser(uid);
+      return new UserProfileEntity(userRecord);
+    } catch (error) {
+      console.error('Get current user error:', error);
+      throw new InternalServerErrorException('Gagal mengambil data user');
+    }
+  }
+
+  /**
+   * Update profile (all-in-one: username, photo, password)
+   */
+  async updateProfile(
+    uid: string,
+    dto: UpdateProfileDto,
+    file?: Express.Multer.File,
+  ): Promise<UserProfileEntity> {
+    try {
+      // Get current user
+      const userRecord = await this.firebaseService.auth.getUser(uid);
+
+      // Build update object
+      const updateData: admin.auth.UpdateRequest = {};
+
+      // 1. Handle username update
+      if (dto.username) {
+        updateData.displayName = dto.username;
+      }
+
+      // 2. Handle profile image upload
+      if (file) {
+        // Validate file
+        this.validateImageFile(file);
+
+        // Delete old profile image if exists
+        if (userRecord.photoURL) {
+          await this.deleteProfileImage(userRecord.photoURL);
+        }
+
+        // Upload new image
+        const newImageUrl = await this.uploadProfileImage(file, uid);
+        updateData.photoURL = newImageUrl;
+      }
+
+      // 3. Handle password change
+      if (dto.newPassword) {
+        // Verify old password
+        await this.verifyPassword(userRecord.email!, dto.oldPassword!);
+
+        // Update password
+        updateData.password = dto.newPassword;
+      }
+
+      // 4. Update Firebase Auth user
+      if (Object.keys(updateData).length > 0) {
+        await this.firebaseService.auth.updateUser(uid, updateData);
+      }
+
+      // 5. Get updated user and return
+      const updatedUser = await this.firebaseService.auth.getUser(uid);
+      return new UserProfileEntity(updatedUser);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      console.error('Update profile error:', error);
+      throw new InternalServerErrorException('Gagal update profile');
+    }
+  }
+
+  /**
+   * HELPER: Upload profile image to Storage
+   */
+  private async uploadProfileImage(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<string> {
+    try {
+      const bucket = this.firebaseService.storage.bucket();
+
+      // Generate unique filename
+      const filename = this.generateImageFileName(file.originalname);
+      const filePath = `${this.PROFILE_PICTURES_PATH}/${userId}/${filename}`;
+
+      // Create file reference
+      const fileRef = bucket.file(filePath);
+
+      // Upload file
+      await fileRef.save(file.buffer, {
+        metadata: {
+          contentType: file.mimetype,
+          metadata: {
+            userId,
+            uploadedAt: new Date().toISOString(),
+            originalName: file.originalname,
+          },
+        },
+      });
+
+      // Make file publicly accessible
+      await fileRef.makePublic();
+
+      // Get public URL
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload profile image error:', error);
+      throw new InternalServerErrorException('Gagal mengupload gambar');
+    }
+  }
+
+  /**
+   * HELPER: Delete profile image from Storage
+   */
+  private async deleteProfileImage(imageUrl: string): Promise<void> {
+    try {
+      const bucket = this.firebaseService.storage.bucket();
+
+      // Extract file path from URL
+      const urlParts = imageUrl.split(`${bucket.name}/`);
+      if (urlParts.length < 2) {
+        console.warn('Invalid image URL:', imageUrl);
+        return;
+      }
+
+      const filePath = urlParts[1];
+
+      // Delete file
+      await bucket.file(filePath).delete();
+    } catch (error) {
+      // Log error but don't throw
+      console.error('Delete profile image error:', error);
+    }
+  }
+
+  /**
+   * HELPER: Verify password
+   */
+  private async verifyPassword(email: string, password: string): Promise<void> {
+    try {
+      const apiKey = this.configService.get<string>('FIREBASE_API_KEY');
+      await axios.post<FirebaseAuthResponse>(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+        {
+          email,
+          password,
+          returnSecureToken: true,
+        },
+      );
+    } catch {
+      throw new UnauthorizedException('Password lama salah');
+    }
+  }
+
+  /**
+   * HELPER: Generate unique filename
+   */
+  private generateImageFileName(originalName: string): string {
+    const timestamp = Date.now();
+    const randomId = uuidv4().split('-')[0];
+    const extension = originalName.split('.').pop();
+    return `${timestamp}_${randomId}.${extension}`;
+  }
+
+  /**
+   * HELPER: Validate image file
+   */
+  private validateImageFile(file: Express.Multer.File): void {
+    if (!file) {
+      throw new BadRequestException('Gambar wajib diupload');
+    }
+
+    // Check file type
+    if (!this.ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Format file tidak valid. Hanya JPG, PNG, dan WebP yang diperbolehkan',
+      );
+    }
+
+    // Check file size
+    if (file.size > this.MAX_FILE_SIZE) {
+      throw new BadRequestException('Ukuran file terlalu besar. Maksimal 5MB');
     }
   }
 }

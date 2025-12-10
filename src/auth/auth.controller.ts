@@ -14,8 +14,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   UploadedFile,
   UploadedFiles,
@@ -38,6 +40,8 @@ import type { RegisterAdminDto } from './dto/register-admin.dto';
 import { RegisterAdminSchema } from './dto/register-admin.dto';
 import type { RegisterDto } from './dto/register.dto';
 import { RegisterSchema } from './dto/register.dto';
+import type { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateProfileSchema } from './dto/update-profile.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
@@ -166,5 +170,65 @@ export class AuthController {
 
     // Return response dengan format yang konsisten
     return createSuccessResponse(HttpStatus.OK, 'Logout berhasil', data);
+  }
+
+  /**
+   * Endpoint: GET /api/v1/auth/me
+   * Get current user profile
+   * Requires: Bearer token di Authorization header
+   * Only accessible by: user role
+   */
+  @Get('me')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('user')
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@CurrentUser() user: { uid: string }) {
+    const data = await this.authService.getCurrentUser(user.uid);
+
+    return createSuccessResponse(
+      HttpStatus.OK,
+      'Berhasil mengambil profile',
+      data,
+    );
+  }
+
+  /**
+   * Endpoint: PATCH /api/v1/auth/profile
+   * Update user profile (all-in-one: username, photo, password)
+   * Requires: Bearer token di Authorization header
+   * Only accessible by: user role
+   *
+   * Request:
+   * - Content-Type: multipart/form-data
+   * - Fields (all optional):
+   *   - username: string (min 3, max 30)
+   *   - oldPassword: string (required if changing password)
+   *   - newPassword: string (min 8, required if changing password)
+   *   - confirmPassword: string (required if changing password)
+   * - File (optional):
+   *   - profileImage: file (max 5MB, JPG/PNG/WebP)
+   */
+  @Patch('profile')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('user')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async updateProfile(
+    @CurrentUser() user: { uid: string },
+    @Body(new ZodValidationPipe(UpdateProfileSchema)) dto: UpdateProfileDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    // Check at least one field is provided
+    if (!dto.username && !file && !dto.oldPassword) {
+      throw new BadRequestException('Minimal satu field harus diisi');
+    }
+
+    const data = await this.authService.updateProfile(user.uid, dto, file);
+
+    return createSuccessResponse(
+      HttpStatus.OK,
+      'Profile berhasil diperbarui',
+      data,
+    );
   }
 }

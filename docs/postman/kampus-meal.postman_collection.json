@@ -92,6 +92,86 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Get My Profile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "me"]
+                },
+                "description": "**GET /auth/me - Get Current User Profile**\\n\\n**Response:**\\n```json\\n{\\n  \\\"uid\\\": \\\"...\\\",\\n  \\\"email\\\": \\\"user@example.com\\\",\\n  \\\"username\\\": \\\"johndoe\\\",\\n  \\\"profileImageUrl\\\": \\\"https://...\\\",\\n  \\\"role\\\": \\\"user\\\"\\n}\\n```"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "username",
+                      "value": "johndoe_updated",
+                      "description": "Update username (OPTIONAL, 3-30 chars, alphanumeric + underscore)",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "profileImage",
+                      "description": "Upload profile picture (OPTIONAL, max 5MB, JPG/PNG/WebP)",
+                      "type": "file",
+                      "src": [],
+                      "disabled": true
+                    },
+                    {
+                      "key": "oldPassword",
+                      "value": "{{user_password}}",
+                      "description": "Old password for verification (REQUIRED if changing password)",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "newPassword",
+                      "value": "newpassword123",
+                      "description": "New password (REQUIRED if changing password, min 8 chars)",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "confirmPassword",
+                      "value": "newpassword123",
+                      "description": "Confirm new password (REQUIRED if changing password)",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "profile"]
+                },
+                "description": "**PATCH /auth/profile - Update Profile (All-in-One)**\\n\\n**All-in-One Update:** Username, Profile Picture, dan Password dalam satu endpoint.\\n\\n**Body (multipart/form-data):**\\n- `username` (OPTIONAL): Edit username (3-30 chars, alphanumeric + underscore)\\n- `profileImage` (OPTIONAL): Upload/ganti foto profile (max 5MB, JPG/PNG/WebP)\\n- `oldPassword` (OPTIONAL): Password lama untuk verifikasi\\n- `newPassword` (OPTIONAL): Password baru (min 8 chars)\\n- `confirmPassword` (OPTIONAL): Konfirmasi password baru\\n\\n**Rules:**\\n- At least ONE field must be provided\\n- If changing password: `oldPassword`, `newPassword`, and `confirmPassword` are ALL REQUIRED\\n- New password must be different from old password\\n- Auto-delete old profile image when uploading new one\\n\\n**Use Cases:**\\n1. Update username only → Enable `username` field\\n2. Update profile image only → Enable `profileImage` field\\n3. Change password only → Enable all 3 password fields\\n4. Update multiple → Enable any combination\\n\\n**Response:**\\n```json\\n{\\n  \\\"uid\\\": \\\"...\\\",\\n  \\\"email\\\": \\\"user@example.com\\\",\\n  \\\"username\\\": \\\"johndoe_updated\\\",\\n  \\\"profileImageUrl\\\": \\\"https://...\\\",\\n  \\\"role\\\": \\\"user\\\"\\n}\\n```\\n\\n**Note:** User tetap logged in setelah ganti password (no forced re-login)."
+              },
+              "response": []
             }
           ]
         },
