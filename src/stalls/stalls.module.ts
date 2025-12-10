@@ -8,9 +8,12 @@ import { FirebaseModule } from '../firebase/firebase.module';
 import { StallsController } from './stalls.controller';
 import { StallsService } from './stalls.service';
 
+import { MenuItemsModule } from '../menu-items/menu-items.module';
+
 @Module({
   imports: [
     FirebaseModule, // Import FirebaseModule untuk akses FirebaseService
+    MenuItemsModule, // Import MenuItemsModule untuk query menu items
   ],
   controllers: [StallsController],
   providers: [StallsService],

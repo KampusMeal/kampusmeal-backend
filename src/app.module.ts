@@ -17,6 +17,8 @@ import { AuthModule } from './auth/auth.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { StallsModule } from './stalls/stalls.module';
 
+import { MenuItemsModule } from './menu-items/menu-items.module';
+
 @Module({
   imports: [
     // ConfigModule untuk baca .env file
@@ -33,6 +35,9 @@ import { StallsModule } from './stalls/stalls.module';
 
     // Stalls module untuk fitur CRUD warung
     StallsModule,
+
+    // Menu Items module untuk fitur menu management
+    MenuItemsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

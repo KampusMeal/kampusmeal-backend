@@ -19,6 +19,7 @@ import {
 import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import { FirebaseService } from '../firebase/firebase.service';
+import { MenuItemsService } from '../menu-items/menu-items.service';
 import type { CreateStallDto } from './dto/create-stall.dto';
 import type { QueryStallDto } from './dto/query-stall.dto';
 import type { UpdateStallDto } from './dto/update-stall.dto';
@@ -45,7 +46,10 @@ export class StallsService {
   // Max file size: 5MB
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-  constructor(private firebaseService: FirebaseService) {}
+  constructor(
+    private firebaseService: FirebaseService,
+    private menuItemsService: MenuItemsService,
+  ) {}
 
   /**
    * Create stall baru
@@ -180,10 +184,18 @@ export class StallsService {
 
       const stall = doc.data() as Stall;
 
-      // TODO: Nanti query menuItems dari collection 'menuItems'
-      // where stallId === id
-      // Sementara return empty array
-      const menuItems = [];
+      // Query menuItems dari MenuItemsService
+      const menuItemEntities = await this.menuItemsService.findByStallId(id);
+
+      // Convert entity to plain object (hanya field yang perlu)
+      const menuItems = menuItemEntities.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        imageUrl: item.imageUrl,
+        isAvailable: item.isAvailable,
+      }));
 
       return new StallDetailEntity(stall, menuItems);
     } catch (error) {

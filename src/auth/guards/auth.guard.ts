@@ -59,6 +59,20 @@ export class AuthGuard implements CanActivate {
         role: userData?.role || 'user',
       };
 
+      // Jika user adalah stall_owner, attach stallId
+      if (userData?.role === 'stall_owner') {
+        const stallSnapshot = await this.firebaseService.firestore
+          .collection('stalls')
+          .where('ownerId', '==', decodedToken.uid)
+          .limit(1)
+          .get();
+
+        if (!stallSnapshot.empty) {
+          const stallDoc = stallSnapshot.docs[0];
+          request.user.stallId = stallDoc.id;
+        }
+      }
+
       return true;
     } catch (error: unknown) {
       const firebaseError = error as { code?: string };

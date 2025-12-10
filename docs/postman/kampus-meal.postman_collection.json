@@ -553,6 +553,177 @@
               "response": []
             }
           ]
+        },
+        {
+          "name": "Menu Management",
+          "item": [
+            {
+              "name": "Create Menu Item",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Nasi Goreng Special",
+                      "type": "text"
+                    },
+                    {
+                      "key": "description",
+                      "value": "Nasi goreng dengan telur, ayam, dan sayuran segar",
+                      "type": "text"
+                    },
+                    {
+                      "key": "price",
+                      "value": "15000",
+                      "type": "text"
+                    },
+                    {
+                      "key": "isAvailable",
+                      "value": "true",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall/menu-items",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall", "menu-items"]
+                },
+                "description": "**POST /stalls/my-stall/menu-items - Create Menu Item**\\n\\n**Required:**\\n- `name`: Nama menu (3-100 karakter)\\n- `description`: Deskripsi menu (10-500 karakter)\\n- `price`: Harga (100-1.000.000, integer)\\n- `image`: File gambar menu (JPG/PNG/WebP, max 5MB)\\n\\n**Optional:**\\n- `isAvailable`: Status ketersediaan (default: true)\\n\\n**Response:**\\nMenu item yang baru dibuat dengan imageUrl dari Firebase Storage"
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Menu Items",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall/menu-items",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall", "menu-items"]
+                },
+                "description": "**GET /stalls/my-stall/menu-items - List Menu Items**\\n\\nGet semua menu items dari warung sendiri.\\n\\n**Response:**\\nArray of menu items, sorted by createdAt descending"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Single Menu Item",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall/menu-items/{{menu_item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall", "menu-items", "{{menu_item_id}}"]
+                },
+                "description": "**GET /stalls/my-stall/menu-items/:id - Get Single Menu Item**\\n\\nGet detail menu item by ID.\\n\\n**Note:** Akan verify ownership otomatis"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Menu Item",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Nasi Goreng Special (Updated)",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "description",
+                      "value": "Deskripsi yang diupdate",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "price",
+                      "value": "18000",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "isAvailable",
+                      "value": "false",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": [],
+                      "disabled": true
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall/menu-items/{{menu_item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall", "menu-items", "{{menu_item_id}}"]
+                },
+                "description": "**PATCH /stalls/my-stall/menu-items/:id - Update Menu Item**\\n\\n**All fields optional:**\\n- `name`: Nama menu baru\\n- `description`: Deskripsi baru\\n- `price`: Harga baru\\n- `isAvailable`: Status ketersediaan\\n- `image`: Gambar baru (akan hapus gambar lama)\\n\\n**Note:** Jika upload image baru, gambar lama akan dihapus otomatis"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Menu Item",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{owner_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/stalls/my-stall/menu-items/{{menu_item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["stalls", "my-stall", "menu-items", "{{menu_item_id}}"]
+                },
+                "description": "**DELETE /stalls/my-stall/menu-items/:id - Delete Menu Item**\\n\\nHapus menu item dari warung sendiri.\\n\\n**WARNING:**\\n- Data menu dihapus permanen\\n- Gambar juga dihapus dari Storage\\n- Tidak bisa di-restore!"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }
