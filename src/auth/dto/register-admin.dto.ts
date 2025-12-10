@@ -1,16 +1,14 @@
 /**
- * Register DTO (Data Transfer Object)
- * DTO adalah object yang mendefinisikan struktur data yang diterima dari client
+ * Register Admin DTO
+ * DTO khusus untuk register sebagai admin/pemilik warung
  *
- * Di sini kita menggunakan Zod untuk validasi
- * Zod lebih simple dan type-safe dibanding class-validator
+ * Sama seperti register biasa, tapi role di-set ke 'admin'
  */
 
 import { z } from 'zod';
 
-// Schema validasi untuk register menggunakan Zod
-// Setiap field punya rules validasi masing-masing
-export const RegisterSchema = z
+// Schema validasi untuk register admin
+export const RegisterAdminSchema = z
   .object({
     // Username: minimal 3 karakter, maksimal 20, hanya huruf, angka, dan underscore
     username: z
@@ -34,18 +32,12 @@ export const RegisterSchema = z
 
     // Confirm Password: harus sama dengan password
     confirmPassword: z.string({ message: 'Konfirmasi password wajib diisi' }),
-
-    // Role: optional, default 'user'
-    // Untuk register biasa, role akan selalu 'user'
-    // Untuk register admin, gunakan endpoint terpisah
-    role: z.enum(['user', 'admin']).optional().default('user'),
   })
-  // .refine() digunakan untuk validasi custom (cross-field validation)
+  // Validasi password sama dengan confirmPassword
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Password dan konfirmasi password tidak sama',
-    path: ['confirmPassword'], // Error akan ditampilkan di field confirmPassword
+    path: ['confirmPassword'],
   });
 
-// Type untuk RegisterDto, di-generate otomatis dari schema
-// Ini membuat TypeScript tahu struktur data yang valid
-export type RegisterDto = z.infer<typeof RegisterSchema>;
+// Type untuk RegisterAdminDto
+export type RegisterAdminDto = z.infer<typeof RegisterAdminSchema>;

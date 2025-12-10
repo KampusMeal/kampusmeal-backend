@@ -38,6 +38,9 @@ export class FirebaseService implements OnModuleInit {
       const privateKey = this.configService
         .get<string>('FIREBASE_PRIVATE_KEY')
         ?.replace(/\\n/g, '\n'); // Replace \n string menjadi newline character
+      const storageBucket = this.configService.get<string>(
+        'FIREBASE_STORAGE_BUCKET',
+      );
 
       // Inisialisasi Firebase Admin SDK
       this.firebaseApp = admin.initializeApp({
@@ -46,6 +49,7 @@ export class FirebaseService implements OnModuleInit {
           clientEmail,
           privateKey,
         }),
+        storageBucket, // Tambahkan storage bucket untuk Firebase Storage
       });
 
       console.log('Firebase Admin SDK initialized successfully');
@@ -69,5 +73,13 @@ export class FirebaseService implements OnModuleInit {
    */
   get firestore(): admin.firestore.Firestore {
     return this.firebaseApp.firestore();
+  }
+
+  /**
+   * Getter untuk Firebase Storage
+   * Digunakan untuk operasi file storage (upload, delete gambar)
+   */
+  get storage(): admin.storage.Storage {
+    return this.firebaseApp.storage();
   }
 }

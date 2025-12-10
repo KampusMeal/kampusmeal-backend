@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // FIREBASE STORAGE SECURITY RULES - KAMPUSMEAL
+    // ============================================
+    // Strategi AWAL (Development Phase):
+    // - READ: Allowed untuk authenticated users (bisa lihat gambar)
+    // - WRITE: Ditolak dari client, harus lewat Backend API
+    // - Backend menggunakan Firebase Admin SDK untuk upload
+    // 
+    // Kenapa?
+    // 1. User perlu bisa lihat gambar produk/stall/profile
+    // 2. Upload validation di backend (file type, size, ownership)
+    // 3. Simple & secure
+    // ============================================
+    
+    match /{allPaths=**} {
+      // Authenticated user bisa READ/view semua gambar
+      allow read: if request.auth != null;
+      
+      // Semua WRITE (upload/delete) harus lewat backend
+      allow write: if false;
+    }
+  }
+}
