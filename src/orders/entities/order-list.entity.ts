@@ -20,6 +20,7 @@ export interface OrderListResponse {
   deliveryMethod: DeliveryMethod;
   rejectionReason: string | null; // NEW: Alasan penolakan (jika status = rejected)
   status: OrderStatus;
+  hasReviewed: boolean; // NEW: Apakah order completed sudah direview
 }
 
 export class OrderListEntity {
@@ -32,6 +33,7 @@ export class OrderListEntity {
   deliveryMethod: DeliveryMethod;
   rejectionReason: string | null; // NEW: Alasan penolakan
   status: OrderStatus;
+  hasReviewed: boolean; // NEW: Apakah order completed sudah direview
 
   constructor(order: Order) {
     this.orderId = order.id;
@@ -75,6 +77,7 @@ export class OrderListEntity {
       deliveryMethod: this.deliveryMethod,
       rejectionReason: this.rejectionReason, // NEW: Include in response
       status: this.status,
+      hasReviewed: this.hasReviewed, // NEW: Include review status
     };
   }
 }

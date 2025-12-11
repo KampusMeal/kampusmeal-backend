@@ -266,8 +266,10 @@ export class OrdersService {
       const paginatedOrders = allOrders.slice(startIndex, endIndex);
 
       // Populate stallImageUrl untuk order lama yang tidak punya field ini
-      const ordersWithImages = await Promise.all(
+      // DAN cek hasReviewed untuk order completed
+      const ordersWithImagesAndReviews = await Promise.all(
         paginatedOrders.map(async (order) => {
+          // Populate stallImageUrl
           if (!order.stallImageUrl && order.stallId) {
             try {
               const stallDoc = await this.firebaseService.firestore
@@ -292,9 +294,37 @@ export class OrdersService {
       );
 
       // Use OrderListEntity for simplified list view
-      const data = ordersWithImages.map((order) =>
-        new OrderListEntity(order).toJSON(),
+      const entitiesWithReviewStatus = await Promise.all(
+        ordersWithImagesAndReviews.map(async (order) => {
+          const entity = new OrderListEntity(order);
+
+          // Cek hasReviewed hanya untuk order completed
+          if (order.status === OrderStatus.COMPLETED) {
+            try {
+              const reviewSnapshot = await this.firebaseService.firestore
+                .collection('reviews')
+                .where('orderId', '==', order.id)
+                .limit(1)
+                .get();
+
+              entity.hasReviewed = !reviewSnapshot.empty;
+            } catch (error) {
+              console.error(
+                `Failed to check review for order ${order.id}:`,
+                error,
+              );
+              entity.hasReviewed = false;
+            }
+          } else {
+            // Untuk order selain completed, hasReviewed = false
+            entity.hasReviewed = false;
+          }
+
+          return entity.toJSON();
+        }),
       );
+
+      const data = entitiesWithReviewStatus;
 
       return {
         data,
