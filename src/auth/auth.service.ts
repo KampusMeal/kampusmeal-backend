@@ -659,7 +659,18 @@ export class AuthService {
         await this.firebaseService.auth.updateUser(uid, updateData);
       }
 
-      // 5. Get updated user and return
+      // 5. Update Firestore users collection if username changed
+      if (dto.username) {
+        await this.firebaseService.firestore
+          .collection(this.USERS_COLLECTION)
+          .doc(uid)
+          .update({
+            username: dto.username,
+            updatedAt: admin.firestore.Timestamp.now(),
+          });
+      }
+
+      // 6. Get updated user and return
       const updatedUser = await this.firebaseService.auth.getUser(uid);
       return new UserProfileEntity(updatedUser);
     } catch (error) {
