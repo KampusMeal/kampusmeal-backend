@@ -4,7 +4,11 @@
  * Hanya menampilkan info penting untuk list view
  */
 
-import { type Order, OrderStatus } from '../interfaces/order.interface';
+import {
+  DeliveryMethod,
+  type Order,
+  OrderStatus,
+} from '../interfaces/order.interface';
 
 export interface OrderListResponse {
   orderId: string;
@@ -13,6 +17,8 @@ export interface OrderListResponse {
   stallImageUrl: string;
   menuItems: string[]; // ["Nasi Goreng (2x)", "Es Teh (1x)"]
   totalPrice: number;
+  deliveryMethod: DeliveryMethod;
+  rejectionReason: string | null; // NEW: Alasan penolakan (jika status = rejected)
   status: OrderStatus;
 }
 
@@ -23,6 +29,8 @@ export class OrderListEntity {
   stallImageUrl: string;
   menuItems: string[];
   totalPrice: number;
+  deliveryMethod: DeliveryMethod;
+  rejectionReason: string | null; // NEW: Alasan penolakan
   status: OrderStatus;
 
   constructor(order: Order) {
@@ -45,6 +53,8 @@ export class OrderListEntity {
     );
 
     this.totalPrice = order.totalPrice;
+    this.deliveryMethod = order.deliveryMethod;
+    this.rejectionReason = order.rejectionReason || null; // NEW: Add rejection reason
 
     // Handle backward compatibility for old "confirmed" status
     if (order.status === OrderStatus.CONFIRMED) {
@@ -62,6 +72,8 @@ export class OrderListEntity {
       stallImageUrl: this.stallImageUrl,
       menuItems: this.menuItems,
       totalPrice: this.totalPrice,
+      deliveryMethod: this.deliveryMethod,
+      rejectionReason: this.rejectionReason, // NEW: Include in response
       status: this.status,
     };
   }

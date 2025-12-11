@@ -2,6 +2,8 @@
 
 Dokumentasi struktur data Firestore untuk Kampus Meal Backend.
 
+**Last Updated:** 11 Desember 2025
+
 ## Collections
 
 ### 1. `users`
@@ -14,11 +16,12 @@ Collection untuk menyimpan data user (pembeli, pemilik warung, admin).
   username: string;         // Username (unique, lowercase)
   email: string;            // Email (unique)
   role: 'user' | 'stall_owner' | 'admin';  // Role user
-  profileImageUrl?: string; // URL foto profile (optional)
   createdAt: Timestamp;     // Waktu dibuat
   updatedAt: Timestamp;     // Waktu terakhir diupdate
 }
 ```
+
+**Note:** Field `profileImageUrl` disimpan di Firebase Auth (via `photoURL`), bukan di Firestore.
 
 ---
 
@@ -28,9 +31,9 @@ Collection untuk menyimpan profile data tambahan user (alamat, dll).
 
 ```typescript
 {
-  uid: string;              // Firebase Auth UID (Document ID)
-  namaAlamat?: string;      // Nama alamat (e.g., "Rumah", "Kos")
-  detilAlamat?: string;     // Detail alamat lengkap
+  userId: string;           // Firebase Auth UID (Document ID)
+  namaAlamat: string | null;  // Nama alamat (e.g., "Rumah", "Kos")
+  detilAlamat: string | null; // Detail alamat lengkap
   createdAt: Timestamp;     // Waktu dibuat
   updatedAt: Timestamp;     // Waktu terakhir diupdate
 }
@@ -54,13 +57,13 @@ Collection untuk menyimpan data warung.
   foodTypes: string[];      // Jenis makanan yang dijual (1-10 items)
                             // Contoh: ["sate", "mie", "pizza", "ayam"]
   rating: number;           // Rating 0.0 - 5.0
-  totalReviews: number;     // Total jumlah review
+  totalReviews?: number;    // Total jumlah review (optional)
   createdAt: Timestamp;     // Waktu dibuat
   updatedAt: Timestamp;     // Waktu terakhir diupdate
 }
 ```
 
-**Available Categories:**
+**Available Categories:** - Strict (wajib)
 
 - Indonesian Food
 - Fast Food
@@ -73,7 +76,7 @@ Collection untuk menyimpan data warung.
 - Vegetarian
 - Others
 
-**Food Types Examples:**
+**Food Types Examples:** - Tidak Strict (tidak wajib, hanya contoh)
 
 Common food types that can be used in the `foodTypes` array:
 
@@ -108,17 +111,17 @@ Collection untuk menyimpan menu items dari setiap warung.
 
 ```typescript
 {
-  id: string; // UUID (Document ID)
-  stallId: string; // ID warung (foreign key ke stalls)
-  name: string; // Nama menu (3-100 chars)
-  description: string; // Deskripsi menu (10-500 chars)
-  category: string[]; // Array kategori menu (1-5 items, tiap item 2-50 chars)
-                      // Contoh: ["Nasi", "Ayam"], ["Minuman", "Dingin"]
-  price: number; // Harga (100-1,000,000)
-  imageUrl: string; // URL gambar menu dari Firebase Storage
-  isAvailable: boolean; // Status ketersediaan (default: true)
-  createdAt: Timestamp; // Waktu dibuat
-  updatedAt: Timestamp; // Waktu terakhir diupdate
+  id: string;               // UUID (Document ID)
+  stallId: string;          // ID warung (foreign key ke stalls)
+  name: string;             // Nama menu (3-100 chars)
+  description: string;      // Deskripsi menu (10-500 chars)
+  category: string[];       // Array kategori menu (1-5 items, tiap item 2-50 chars)
+                            // Contoh: ["Nasi", "Ayam"], ["Minuman", "Dingin"]
+  price: number;            // Harga (100-1,000,000)
+  imageUrl: string;         // URL gambar menu dari Firebase Storage
+  isAvailable: boolean;     // Status ketersediaan (default: true)
+  createdAt: Timestamp;     // Waktu dibuat
+  updatedAt: Timestamp;     // Waktu terakhir diupdate
 }
 ```
 
@@ -148,21 +151,24 @@ Collection untuk menyimpan shopping cart user.
 
 ```typescript
 {
-  userId: string; // Firebase Auth UID (Document ID)
-  stallId: string; // ID warung (single stall policy)
+  userId: string;           // Firebase Auth UID (Document ID)
+  stallId: string;          // ID warung (single stall policy)
+  stallName: string;        // Nama warung (untuk display di cart)
   items: Array<{
-    menuItemId: string; // ID menu item
-    name: string; // Nama menu (snapshot)
-    price: number; // Harga (snapshot)
-    imageUrl: string; // URL gambar menu (snapshot)
-    quantity: number; // Jumlah item (1-99)
-    subtotal: number; // price * quantity
+    menuItemId: string;     // ID menu item
+    name: string;           // Nama menu (snapshot)
+    price: number;          // Harga (snapshot)
+    imageUrl: string;       // URL gambar menu (snapshot)
+    quantity: number;       // Jumlah item (1-99)
+    subtotal: number;       // price * quantity
   }>;
-  totalPrice: number; // Total harga seluruh items
-  createdAt: Timestamp; // Waktu dibuat
-  updatedAt: Timestamp; // Waktu terakhir diupdate
+  totalPrice: number;       // Total harga seluruh items
+  createdAt: Timestamp;     // Waktu dibuat
+  updatedAt: Timestamp;     // Waktu terakhir diupdate
 }
 ```
+
+**Note:** Response API `/cart` juga include field `qris` (URL QRIS dari warung), tapi ini diambil dari collection `stalls`, bukan disimpan di cart document.
 
 ---
 
@@ -191,14 +197,16 @@ Collection untuk menyimpan order/pesanan.
   deliveryMethod: 'pickup' | 'delivery';  // Metode pengambilan
   deliveryFee: number;                // Biaya delivery (Rp 5.000 jika delivery, Rp 0 jika pickup)
   totalPrice: number;                 // itemsTotal + appFee + deliveryFee
-  paymentProofUrl: string;            // URL bukti pembayaran
-  status: 'waiting_confirmation'      // Status order
+  paymentProofUrl: string | null;     // URL bukti pembayaran (null jika belum upload)
+  status: 'pending_payment'           // Status order
+        | 'waiting_confirmation'
         | 'processing'
         | 'ready'
         | 'completed'
-        | 'rejected';
-  rejectionReason?: string;           // Alasan penolakan (jika status = rejected)
-  isReviewed: boolean;                // Apakah sudah direview (default: false)
+        | 'rejected'
+        | 'confirmed';                // @deprecated - Use 'processing' instead
+  rejectionReason: string | null;     // Alasan penolakan (jika status = rejected)
+  isReviewed?: boolean;               // Apakah sudah direview (default: false)
   createdAt: Timestamp;               // Waktu dibuat
   updatedAt: Timestamp;               // Waktu terakhir diupdate
 }
@@ -206,11 +214,35 @@ Collection untuk menyimpan order/pesanan.
 
 **Order Status Flow:**
 
-1. `waiting_confirmation` - User upload bukti bayar, menunggu validasi owner
-2. `processing` - Owner approve, pesanan sedang dibuat
-3. `ready` - Pesanan jadi, siap diambil/dikirim
-4. `completed` - Pesanan sudah diambil/diterima user
-5. `rejected` - Pembayaran ditolak owner (user bisa upload ulang bukti)
+```
+┌─────────────────────┐
+│   pending_payment   │  ← Order dibuat, user belum upload bukti (JARANG DIPAKAI)
+└──────────┬──────────┘
+           │ User upload bukti saat checkout
+           ▼
+┌──────────────────────────┐
+│  waiting_confirmation    │  ← User sudah upload bukti, menunggu owner validasi
+└──────────┬───────────────┘
+           │                    
+           ├─────────────────────────────────────┐
+           │ Owner APPROVE                       │ Owner REJECT
+           ▼                                     ▼
+┌──────────────────┐                   ┌──────────────────┐
+│    processing    │                   │     rejected     │
+└──────────┬───────┘                   └──────────┬───────┘
+           │ Owner mark ready                     │ User upload ulang bukti
+           ▼                                      │ └──> kembali ke waiting_confirmation
+┌──────────────────┐
+│      ready       │  ← Pesanan siap diambil/dikirim
+└──────────┬───────┘
+           │ Owner mark complete
+           ▼
+┌──────────────────┐
+│    completed     │  ← Pesanan selesai
+└──────────────────┘
+```
+
+**Note:** Status `confirmed` adalah **deprecated** dan hanya untuk backward compatibility dengan order lama. Gunakan `processing` untuk order baru.
 
 ---
 
@@ -221,24 +253,42 @@ Collection untuk menyimpan review warung dari user.
 ```typescript
 {
   id: string;               // UUID (Document ID)
-  orderId: string;          // ID order yang direview
+  orderId: string;          // ID order yang direview (1 order = 1 review)
   userId: string;           // Firebase Auth UID pembeli
-  username: string;         // Username pembeli (snapshot)
-  profileImageUrl?: string; // URL foto profile pembeli (snapshot, optional)
+  userName: string;         // Username pembeli (snapshot)
   stallId: string;          // ID warung
-  rating: number;           // Rating 1-5
-  comment?: string;         // Komentar review (optional)
-  tags?: string[];          // Tags review (max 5, optional)
+  stallName: string;        // Nama warung (snapshot)
+  rating: number;           // Rating 1-5 (WAJIB)
+  comment: string;          // Komentar review (bisa kosong string "")
+  tags: string[];           // Tags review (max 5, bisa empty array [])
                             // Available tags: "Enak Banget", "Porsi Besar", "Harga Terjangkau", dll
-  images?: string[];        // URL gambar review (max 5, optional)
+  imageUrls: string[];      // URL gambar review (max 5, bisa empty array [])
   createdAt: Timestamp;     // Waktu dibuat
+  updatedAt: Timestamp;     // Waktu terakhir diupdate
 }
 ```
 
 **Available Review Tags:**
 
-- Positive: "Enak Banget", "Porsi Besar", "Harga Terjangkau", "Cepat Disajikan", "Bersih & Higienis", "Pelayanan Ramah", "Bumbu Pas", "Masih Hangat", "Bahan Segar", "Lokasi Strategis"
-- Negative: "Lama Penyajian", "Agak Mahal", "Porsi Kecil", "Kurang Bumbu", "Sudah Dingin", "Kurang Higienis"
+Positive:
+- "Enak Banget"
+- "Porsi Besar"
+- "Harga Terjangkau"
+- "Cepat Disajikan"
+- "Bersih & Higienis"
+- "Pelayanan Ramah"
+- "Bumbu Pas"
+- "Masih Hangat"
+- "Bahan Segar"
+- "Lokasi Strategis"
+
+Negative:
+- "Lama Penyajian"
+- "Agak Mahal"
+- "Porsi Kecil"
+- "Kurang Bumbu"
+- "Sudah Dingin"
+- "Kurang Higienis"
 
 ---
 
@@ -246,34 +296,34 @@ Collection untuk menyimpan review warung dari user.
 
 ### `/stalls/{stallId}/`
 
-- `image.jpg` - Gambar warung
-- `qris.jpg` - Gambar QRIS pembayaran
+- `{timestamp}_{randomId}.{ext}` - Gambar warung
+- `{timestamp}_{randomId}.{ext}` - Gambar QRIS pembayaran
 
-### `/menu-items/{menuItemId}/`
+### `/menu-items/{stallId}/`
 
-- `image.jpg` - Gambar menu item
+- `{timestamp}_{randomId}.{ext}` - Gambar menu item
 
-### `/orders/{orderId}/`
+### `/payment-proofs/{orderId}/`
 
-- `proof.jpg` - Bukti pembayaran
+- `{timestamp}_{randomId}.{ext}` - Bukti pembayaran
 
-### `/profiles/{uid}/`
+### `/profile-pictures/{userId}/`
 
-- `profile.jpg` - Foto profile user
+- `{timestamp}_{randomId}.{ext}` - Foto profile user
 
 ### `/reviews/{reviewId}/`
 
-- `image-1.jpg` - Gambar review 1
-- `image-2.jpg` - Gambar review 2
-- ... (max 5 images)
+- `{timestamp}_{randomId}.{ext}` - Gambar review (max 5)
 
 ---
 
 ## Notes
 
 1. **Timestamps**: Semua timestamps menggunakan `admin.firestore.Timestamp` untuk consistency
-2. **IDs**: Document IDs menggunakan UUID v4 untuk semua collection (kecuali users yang pakai UID dari Firebase Auth)
+2. **IDs**: Document IDs menggunakan UUID v4 untuk semua collection (kecuali users/user_profiles yang pakai UID dari Firebase Auth)
 3. **Snapshots**: Field seperti username, stallName, menuItem details di-snapshot saat order dibuat agar tidak berubah jika data asli berubah
-4. **Single Stall Policy**: 1 cart hanya boleh berisi items dari 1 warung
+4. **Single Stall Policy**: 1 cart hanya boleh berisi items dari 1 warung. Jika user add item dari warung lain, cart lama dihapus.
 5. **Security**: Semua akses ke Firestore melalui Backend API (NestJS dengan Firebase Admin SDK). Client tidak boleh akses langsung.
 6. **Food Types**: Field `foodTypes` di stalls berisi array of string untuk jenis makanan yang dijual (e.g., ["sate", "mie", "pizza", "ayam"]). Min 1, max 10 items.
+7. **Nullable Fields**: Field dengan tipe `string | null` bisa bernilai null dan WAJIB di-handle di frontend.
+8. **Optional Fields**: Field dengan `?:` bisa tidak ada di document (undefined).
